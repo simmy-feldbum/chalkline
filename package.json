@@ -1,0 +1,8 @@
+{
+  "name": "chalkline",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Chalkline, a gamified calisthenics tracker",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}

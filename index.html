@@ -1,0 +1,1417 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Chalkline — calisthenics tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#000;--ink:#F3EFE8;--mute:#A6A199;--dim:#6E6A63;--line:#232323;--line2:#3B3B3B;--lift:#0E0E0E;
+  --main:#E5383B;--part:#F2C230;--r:3px;
+  --rose:#EC4A72;--orange:#F58A3C;--gamboge:#F2C230;--lime:#A9CF45;--emerald:#2FC08E;--cerulean:#35ADE6;--ultra:#6470F0;--violet:#A565EA;
+  --font:"Archivo","Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+  color-scheme:dark;box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px);background:#000}
+body{margin:0;min-height:100%;background:#000;color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;overflow-x:hidden}
+button,input,select{font:inherit;color:inherit}
+button{background:none;border:0;padding:0;cursor:pointer;text-align:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+h1,h2,h3,p{margin:0}
+svg{display:block}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ---------- shell */
+.side{display:none}
+.main{padding:14px 14px 104px;max-width:1220px}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));background:#000;border-top:1px solid var(--line2);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 8px;color:var(--dim);font-size:10px;font-stretch:75%;font-weight:600;position:relative;min-width:0}
+.tab svg{width:20px;height:20px}
+.tab span{max-width:100%;overflow:hidden;white-space:nowrap}
+.tab[aria-current="page"]{color:var(--ink)}
+.tab[aria-current="page"]::before{content:"";position:absolute;top:-1px;left:22%;right:22%;height:3px;background:var(--tc,var(--ink))}
+@media (min-width:960px){
+  .tabbar{display:none}
+  .side{display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;width:224px;border-right:1px solid var(--line);padding:22px 14px 16px;gap:2px;overflow:auto}
+  .main{margin-left:224px;padding:26px 34px 60px}
+  .brand{font-stretch:122%;font-weight:800;font-size:21px;letter-spacing:-.01em;padding:0 10px 20px}
+  .snav{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:var(--r);color:var(--mute);font-weight:550;font-size:14.5px;position:relative}
+  .snav svg{width:19px;height:19px;flex:none}
+  .snav:hover{color:var(--ink)}
+  .snav[aria-current="page"]{color:var(--ink);background:var(--lift)}
+  .snav[aria-current="page"]::before{content:"";position:absolute;left:0;top:7px;bottom:7px;width:3px;background:var(--tc,var(--ink))}
+  .side-foot{margin-top:auto;padding:14px 10px 0;border-top:1px solid var(--line);display:grid;gap:10px}
+}
+.wk{display:flex;align-items:baseline;gap:8px}
+.wk b{font-stretch:122%;font-weight:800;font-size:26px;line-height:1}
+.wk span{color:var(--mute);font-size:12.5px}
+
+/* ---------- page head */
+.phead{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;align-items:start;min-height:96px;padding:16px 2px 14px;margin-bottom:14px;isolation:isolate}
+.phead::before{content:"";position:absolute;z-index:-1;left:-14px;top:-4px;width:min(520px,92%);height:92px;background-size:100% 100%;background-repeat:no-repeat;opacity:.9}
+.phead h1{font-stretch:122%;font-weight:800;font-size:clamp(30px,7vw,44px);line-height:1.05;letter-spacing:-.015em}
+.phead .sub{grid-column:1/-1;color:var(--mute);font-size:13.5px;max-width:56ch;align-self:end}
+.phead-tools{display:flex;gap:8px;align-items:center}
+@media (min-width:960px){.phead{min-height:124px;padding-top:26px}.phead::before{height:112px;top:0}.phead .only-m{display:none}}
+/* ---------- buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:38px;padding:0 14px;border:1px solid var(--line2);border-radius:var(--r);font-weight:600;font-size:13.5px;white-space:nowrap;background:#000}
+.btn:hover{border-color:var(--mute)}
+.btn.pri{background:var(--ink);color:#000;border-color:var(--ink)}
+.btn.pri:hover{background:#fff}
+.btn.big{min-height:48px;font-size:15.5px;width:100%}
+.btn.sm{min-height:30px;padding:0 10px;font-size:12.5px}
+.btn.danger{color:#ff8587;border-color:#5a2224}
+.btn[disabled]{opacity:.35;cursor:default}
+.btn svg{width:16px;height:16px}
+.ib{width:38px;height:38px;border-radius:50%;border:1px solid var(--line2);display:inline-grid;place-items:center;flex:none;background:#000}
+.ib:hover{border-color:var(--mute)}
+.ib svg{width:17px;height:17px}
+.ib.sm{width:30px;height:30px}.ib.sm svg{width:14px;height:14px}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 13px;border:1px solid var(--line2);border-radius:999px;font-size:13px;font-weight:550;color:var(--mute);white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--ink);color:#000;border-color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip.amt{gap:7px}.chip.amt b{color:var(--ink);font-weight:700}.chip.amt span{font-size:12px}
+.chip.amt[aria-pressed="true"] b{color:#000}
+.dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--c,var(--mute))}
+.tag{display:inline-flex;align-items:center;min-height:21px;padding:0 8px;border:1px solid var(--line2);border-radius:999px;font-size:11.5px;color:var(--mute);white-space:nowrap}
+.field{width:100%;min-height:42px;padding:0 12px;background:#000;border:1px solid var(--line2);border-radius:var(--r);color:var(--ink)}
+.field::placeholder{color:var(--dim)}
+.lab{display:block;font-size:12.5px;color:var(--mute);margin-bottom:6px;font-weight:550}
+
+/* ---------- sections */
+.secs{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;align-items:start}
+.sec{grid-column:span 12;border:1px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+@media (min-width:960px){.sec.half{grid-column:span 6}.sec{padding:20px}}
+.sec-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;min-height:30px}
+.sec-h h2{font-size:16px;font-weight:720;font-stretch:108%;letter-spacing:-.005em}
+.sec-h .aside{color:var(--mute);font-size:12.5px}
+.arr .sec{border-style:dashed;border-color:var(--line2)}
+.sec-tools{display:flex;gap:6px}
+.w-toggle{display:none}
+@media (min-width:960px){.w-toggle{display:inline-flex}}
+.hidden-list{grid-column:span 12;display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:var(--mute);font-size:13px}
+.empty{color:var(--mute);font-size:14px;padding:6px 0 2px;max-width:52ch}
+.empty .btn{margin-top:12px}
+
+/* ---------- exercise rows */
+.rows{display:grid}
+.row{display:grid;grid-template-columns:60px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line);width:100%}
+.rows>.row:first-child{border-top:0;padding-top:0}
+.rows>.row:last-child{padding-bottom:0}
+button.row:hover .nm{text-decoration:underline;text-underline-offset:3px}
+.thumb{width:60px;height:60px;background-size:100% 100%;color:var(--ink);flex:none}
+.thumb.lg{width:100%;max-width:230px;height:auto;aspect-ratio:1}
+.thumb.md{width:76px;height:76px}
+.thumb.xs{width:48px;height:48px}
+.fig{width:100%;height:100%}
+.fig path,.fig ellipse,.fig rect{vector-effect:non-scaling-stroke}
+.fig .a{stroke-width:2px}.fig .b{stroke-width:.8px}.fig .c{stroke-width:1.1px}
+.thumb.lg .fig .a,.goal .fig .a{stroke-width:3px}.thumb.lg .fig .b,.goal .fig .b{stroke-width:1.1px}.thumb.lg .fig .c,.goal .fig .c{stroke-width:1.6px}
+.nm{display:block;font-weight:650;font-size:15px;line-height:1.25;overflow-wrap:anywhere}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 9px;margin-top:4px;color:var(--mute);font-size:12.5px}
+.right{text-align:right;color:var(--mute);font-size:12.5px;line-height:1.3}
+.right b{display:block;color:var(--ink);font-size:15px;font-weight:700}
+.stars{position:relative;display:inline-block;width:70px;height:13px;flex:none}
+.stars i{position:absolute;inset:0;background:repeat-x left center/14px 13px}
+.stars .s0{opacity:.22}
+.bm{width:58px;height:48px;flex:none}
+.bm.lg{width:100%;max-width:250px;height:auto}
+.bm rect,.bm circle{fill:#272727}
+.bm .m{fill:var(--main)}.bm .p{fill:var(--part)}
+.bm.pick rect[data-m]{cursor:pointer}
+.bm text{fill:var(--mute);font-size:7px;font-weight:600;text-anchor:middle}
+.desc{font-size:14.5px;line-height:1.5;max-width:60ch;margin:0 0 4px}
+.chart.sm{height:120px}
+.legend{display:flex;gap:14px;font-size:12.5px;color:var(--mute);flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sq{width:10px;height:10px;background:var(--c)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:0 28px}
+.cards .row{border-top:1px solid var(--line)!important;padding:11px 0!important}
+
+/* ---------- brush bars */
+.bar{position:relative;height:16px;background:var(--lift);border-radius:var(--r);overflow:hidden}
+.bar>i{position:absolute;left:0;top:0;bottom:0;background-size:100% 100%}
+.bar.thin{height:10px}
+.segs{display:flex;gap:4px}
+.segs i{flex:1;height:10px;background-color:var(--lift);background-size:100% 100%;border-radius:1px}
+.segs i[class*="w-"]{background-color:transparent}
+.segs i.cur{outline:1px solid var(--ink);outline-offset:1px}
+
+/* ---------- project cards */
+.pgrid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr))}
+.pcard{position:relative;display:grid;gap:12px;padding:16px;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;isolation:isolate;width:100%;min-height:190px;align-content:end}
+.pcard:hover{border-color:var(--line2)}
+.pcard .wash{position:absolute;z-index:-1;right:-30px;top:-34px;width:210px;height:210px;background-size:100% 100%;opacity:.95}
+.pcard .goal{position:absolute;right:14px;top:10px;width:112px;height:112px;color:var(--ink)}
+.pcard .pn{display:block;font-stretch:118%;font-weight:800;font-size:23px;line-height:1.05;max-width:60%;letter-spacing:-.01em}
+.pcard .cnt{color:var(--mute);font-size:12.5px;margin-top:5px}
+.pcard .now{font-size:13.5px}
+.pcard .now span{color:var(--mute)}
+.ladder{display:grid}
+.step{display:grid;grid-template-columns:30px 60px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line);width:100%}
+.step:first-child{border-top:0}
+.num{width:28px;height:28px;border-radius:50%;border:1px solid var(--line2);display:grid;place-items:center;font-size:12.5px;font-weight:700;color:var(--mute)}
+.step.ok .num{background:var(--pc);border-color:var(--pc);color:#000}
+.step.cur .num{border-color:var(--ink);color:var(--ink)}
+.step.next{opacity:.62}
+.phero{position:relative;isolation:isolate;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:end;border:1px solid var(--line);border-radius:var(--r);padding:20px;overflow:hidden;margin-bottom:14px;min-height:190px}
+.phero .wash{position:absolute;z-index:-1;right:-40px;top:-50px;width:340px;height:340px;background-size:100% 100%}
+.phero h1{font-stretch:122%;font-weight:800;font-size:clamp(30px,6vw,46px);line-height:1;letter-spacing:-.015em}
+.phero .goal{width:clamp(110px,26vw,170px);height:clamp(110px,26vw,170px);color:var(--ink)}
+.swatches{display:flex;gap:9px;flex-wrap:wrap}
+.sw{width:30px;height:30px;border-radius:50%;background:var(--c);border:2px solid #000;outline:1px solid var(--line2)}
+.sw[aria-pressed="true"]{outline:2px solid var(--ink)}
+.edit-step{display:grid;grid-template-columns:48px minmax(0,1fr);gap:10px 12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.edit-step .ctl{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+
+/* ---------- steppers */
+.stp{display:inline-flex;align-items:center;gap:8px}
+.stp b{min-width:54px;text-align:center;font-weight:700;font-size:14px}
+.stp.xl{gap:14px}
+.stp.xl b{font-stretch:122%;font-weight:800;font-size:40px;line-height:1;min-width:96px}
+.stp.xl .ib{width:46px;height:46px}
+.stp.xl input{width:104px;text-align:center;background:none;border:0;border-bottom:1px solid var(--line2);border-radius:0;font-stretch:122%;font-weight:800;font-size:40px;line-height:1;padding:0 0 4px;-moz-appearance:textfield;appearance:textfield}
+.stp.xl input::-webkit-outer-spin-button,.stp.xl input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.stp.xl small{display:block;font-size:12px;color:var(--mute);font-weight:500;font-stretch:100%;margin-top:3px}
+
+/* ---------- numbers and charts */
+.big{font-stretch:122%;font-weight:800;font-size:clamp(46px,9vw,68px);line-height:.95;letter-spacing:-.02em}
+.big small{font-size:15px;font-weight:550;color:var(--mute);font-stretch:100%;letter-spacing:0;margin-left:6px}
+.duo{display:grid;gap:12px;margin-top:16px}
+.duo .l{display:flex;justify-content:space-between;font-size:13px;color:var(--mute);margin-bottom:5px}
+.duo .l b{color:var(--ink)}
+.delta{font-size:14px;margin-top:8px;color:var(--mute)}
+.delta b{color:var(--ink)}
+.chart{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px;height:220px}
+.col{display:grid;grid-template-rows:minmax(0,1fr) auto;gap:6px;min-width:0}
+.col .bw{position:relative;margin-top:20px;border-bottom:1px solid var(--line2)}
+.col .b{position:absolute;left:8%;right:8%;bottom:0;background-size:100% 100%;opacity:.5}
+.col .v{position:absolute;left:0;right:0;font-size:11px;color:var(--mute);text-align:center;font-weight:600;white-space:nowrap;padding-bottom:3px}
+.col.now .b{opacity:1}.col.now .v{color:var(--ink)}
+.col .x{font-size:11px;color:var(--dim);text-align:center;white-space:nowrap;overflow:hidden;font-stretch:85%}
+.col.now .x{color:var(--ink)}
+.src{display:grid;grid-template-columns:104px minmax(0,1fr) 52px;gap:10px;align-items:center;font-size:13px;padding:6px 0}
+.src b{text-align:right}
+.rules{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);color:var(--mute);font-size:12.5px;display:grid;gap:4px}
+.ent{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.ent:first-child{border-top:0}
+.ent .pts{font-weight:750;font-stretch:112%}
+.bon{display:inline-flex;gap:5px;flex-wrap:wrap}
+.bon .tag{border-color:transparent;background:var(--lift);color:var(--ink)}
+.dayh{display:flex;justify-content:space-between;align-items:baseline;padding:14px 0 6px;font-size:13px;color:var(--mute);border-top:1px solid var(--line2);margin-top:8px}
+.dayh:first-child{border-top:0;margin-top:0;padding-top:0}
+.dayh b{color:var(--ink);font-size:14px}
+
+/* ---------- plan */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.day{display:grid;gap:5px;justify-items:center;padding:9px 2px 8px;border:1px solid var(--line);border-radius:var(--r);min-height:86px;align-content:start}
+.day small{font-size:11px;color:var(--mute);font-stretch:88%}
+.day b{font-stretch:118%;font-weight:800;font-size:19px;line-height:1}
+.day .dots{display:flex;gap:3px;min-height:9px;flex-wrap:wrap;justify-content:center}
+.day .n{font-size:10.5px;color:var(--dim)}
+@media (max-width:640px){.day .n .w{display:none}}
+.day[aria-pressed="true"]{border-color:var(--ink);background:var(--lift)}
+.day.tod small{color:var(--ink);font-weight:700}
+.pitem{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:8px 12px;align-items:center;padding:11px 0;border-top:1px solid var(--line)}
+.pitem .ctl{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+.opt{display:grid;gap:8px;margin-bottom:16px}
+
+/* ---------- sheet */
+.scrim{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.72)}
+.sheet{position:fixed;z-index:41;left:0;right:0;bottom:0;max-height:93%;overflow:auto;background:#000;border-top:1px solid var(--line2);padding:16px 16px calc(22px + env(safe-area-inset-bottom,0px));overscroll-behavior:contain}
+@media (min-width:960px){.sheet{left:auto;top:0;width:480px;max-height:none;border-top:0;border-left:1px solid var(--line2);padding:24px}}
+.sh-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+.sh-top h2{font-stretch:118%;font-weight:800;font-size:26px;line-height:1.05;letter-spacing:-.01em}
+.xgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:center;margin:6px 0 16px}
+.kv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);margin:14px 0}
+.kv.four{grid-template-columns:repeat(2,minmax(0,1fr))}
+.kv div{padding:10px 12px;background:#000}
+.kv small{display:block;color:var(--mute);font-size:11.5px}
+.kv b{font-size:16px;font-weight:750}
+.logbox{border:1px solid var(--line2);border-radius:var(--r);padding:16px;display:grid;gap:16px;margin-top:14px}
+.logbox .two{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.pre{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.pre .t{font-stretch:122%;font-weight:800;font-size:24px}
+.grp{margin-top:18px}
+.grp h3{font-size:13px;color:var(--mute);font-weight:600;margin-bottom:8px}
+.form{display:grid;gap:16px}
+.posegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:6px}
+.posegrid button{border:1px solid var(--line);border-radius:var(--r);color:var(--ink)}
+.posegrid button[aria-pressed="true"]{border-color:var(--ink);background:var(--lift)}
+.starpick{display:flex;align-items:center;gap:12px}
+
+/* ---------- toast */
+.toast{position:fixed;z-index:60;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(430px,calc(100% - 24px));background:#000;border:1px solid var(--line2);border-radius:var(--r);padding:14px 16px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;isolation:isolate;overflow:hidden}
+@media (min-width:960px){.toast{bottom:28px;left:calc(50% + 112px)}}
+.toast .splash{position:absolute;z-index:-1;left:-46px;top:50%;width:200px;height:200px;margin-top:-100px;background-size:100% 100%;animation:bloom .9s cubic-bezier(.2,.8,.2,1) both}
+.toast .t{font-stretch:122%;font-weight:800;font-size:30px;line-height:1}
+.toast .d{font-size:12.5px;color:var(--mute)}
+@keyframes bloom{from{transform:scale(.2) rotate(-25deg);opacity:0}60%{opacity:1}to{transform:scale(1) rotate(0);opacity:.95}}
+@media (prefers-reduced-motion:reduce){.toast .splash{animation:none}}
+.sync{font-size:12px;color:var(--dim)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal"></div>
+<div id="toast" aria-live="polite"></div>
+<script>
+"use strict";
+/* ================= data: exercises, poses, default projects ================= */
+const PIG={rose:'#EC4A72',orange:'#F58A3C',gamboge:'#F2C230',lime:'#A9CF45',emerald:'#2FC08E',cerulean:'#35ADE6',ultra:'#6470F0',violet:'#A565EA'};
+const PIG2={rose:'orange',orange:'rose',gamboge:'orange',lime:'emerald',emerald:'cerulean',cerulean:'ultra',ultra:'violet',violet:'rose'};
+const GROUPS={push:{name:'Push',c:'orange'},pull:{name:'Pull',c:'cerulean'},legs:{name:'Legs',c:'emerald'},core:{name:'Core',c:'violet'},stretch:{name:'Stretch',c:'lime'}};
+const MUSC={sho:'Shoulders',che:'Chest',bic:'Biceps',tri:'Triceps',fore:'Forearms',abs:'Abs',lat:'Lats',trap:'Upper back',low:'Lower back',glu:'Glutes',quad:'Quads',ham:'Hamstrings',calf:'Calves'};
+const USES=['Strength','Skill hold','Balance','Explosive power','Endurance','Control','Mobility'];
+
+// pose: t torso angle, h head angle, a/a2 arm [upper,fore], l/l2 leg [thigh,shin], f/f2 foot angle (null = none),
+// fl floor gap below the lowest joint, pr props [type, joint, offset]. Angles: 0 right, 90 down, -90 up.
+const BAR=[['bar','hd']], PB=[['pbar','hd']];
+const B={}; const POSES={};
+function E(id,name,g,u,d,use,m,p,def,pose){const own=typeof pose!=='string';B[id]={id,name,g,u,d,use,m:m.split(' '),p:p?p.split(' '):[],def,pose:own?id:pose};if(own)POSES[id]=pose}
+
+// ---- pull
+E('hang','Dead hang','pull','sec',0.5,'Endurance','fore','lat sho',30,{t:-90,a:[-96,-87],l:[90,90],pr:BAR});
+E('scap','Scapular pull-up','pull','reps',1,'Control','trap lat','fore',8,{t:-92,a:[-87,-91],l:[96,122],pr:BAR});
+E('row','Australian row','pull','reps',1,'Strength','lat trap','bic fore abs',8,{t:-20,a:[-90,-90],l:[160,160],f:-100,fl:0,pr:PB});
+E('negpull','Negative pull-up','pull','reps',1.5,'Control','lat bic','fore trap',5,{t:-90,a:[-10,-90],l:[85,100],pr:BAR});
+E('pullup','Pull-up','pull','reps',2,'Strength','lat bic','trap fore abs',5,{t:-90,a:[60,-75],l:[85,95],pr:BAR});
+E('chinup','Chin-up','pull','reps',2,'Strength','bic lat','fore trap',5,{t:-88,a:[65,-72],l:[70,130],pr:BAR});
+E('c2b','Chest-to-bar pull-up','pull','reps',2.5,'Strength','lat trap','bic fore abs',4,{t:-100,a:[70,-50],l:[80,100],pr:BAR});
+E('highpull','Explosive pull-up','pull','reps',3,'Explosive power','lat bic','trap abs fore',3,{t:-106,a:[80,-35],l:[62,108],pr:BAR});
+E('negmu','Negative muscle-up','pull','reps',3,'Control','lat tri che','bic sho abs',3,{t:-60,a:[160,35],l:[100,95],pr:BAR});
+E('muscleup','Muscle-up','pull','reps',3.5,'Explosive power','lat tri che','bic sho abs fore',1,{t:-78,a:[108,78],l:[96,102],pr:BAR});
+// ---- front lever
+E('tuckfl','Tuck front lever','pull','sec',2.5,'Skill hold','lat abs','trap fore sho',8,{t:180,a:[-70,-70],l:[-150,10],f:null,pr:BAR});
+E('advfl','Advanced tuck front lever','pull','sec',3,'Skill hold','lat abs','trap fore sho',6,{t:180,a:[-68,-68],l:[-90,0],pr:BAR});
+E('onefl','One-leg front lever','pull','sec',3.5,'Skill hold','lat abs','trap fore sho glu',5,{t:180,a:[-66,-66],l:[0,0],l2:[-140,15],f2:null,pr:BAR});
+E('strfl','Straddle front lever','pull','sec',4,'Skill hold','lat abs','trap fore sho glu',4,{t:180,a:[-65,-65],l:[7,7],l2:[-11,-11],pr:BAR});
+E('fl','Front lever','pull','sec',4.5,'Skill hold','lat abs','trap fore sho glu low',3,{t:180,a:[-64,-64],l:[0,0],pr:BAR});
+// ---- push
+E('incpush','Incline push-up','push','reps',0.5,'Strength','che tri','sho abs',10,{t:-40,a:[90,90],l:[140,140],f:-110,fl:0,pr:[['box','hd']]});
+E('pushup','Push-up','push','reps',1,'Strength','che tri','sho abs',10,{t:-24,a:[90,90],l:[156,156],f:-110,fl:0});
+E('diamond','Diamond push-up','push','reps',1.5,'Strength','tri che','sho abs',8,{t:-19,a:[140,75],l:[161,161],f:-110,fl:0});
+E('archer','Archer push-up','push','reps',2.5,'Strength','che tri','sho abs',5,{t:-14,a:[160,60],a2:[37,37],l:[166,166],f:-110,fl:0});
+E('incone','Incline one-arm push-up','push','reps',3,'Strength','che tri','sho abs',4,{t:-40,a:[90,90],a2:[140,150],l:[140,140],f:-110,fl:0,pr:[['box','hd']]});
+E('onepush','One-arm push-up','push','reps',3.5,'Strength','che tri','sho abs',1,{t:-24,a:[90,90],a2:[156,165],l:[156,156],l2:[149,149],f:-110,f2:-110,fl:0});
+E('dip','Dip','push','reps',2,'Strength','tri che','sho',6,{t:-78,a:[150,82],l:[100,165],f:null,fl:10,pr:PB});
+E('sbdip','Straight bar dip','push','reps',2.5,'Strength','tri che','sho abs',5,{t:-62,a:[125,72],l:[98,96],pr:BAR});
+E('pike','Pike push-up','push','reps',1.5,'Strength','sho tri','che trap abs',8,{t:40,h:45,a:[45,45],l:[117,117],f:0,fl:0});
+E('epike','Elevated pike push-up','push','reps',2,'Strength','sho tri','che trap abs',6,{t:40,h:45,a:[45,45],l:[148,148],f:-110,fl:0,pr:[['box','ft']]});
+E('wallhs','Wall handstand','push','sec',2,'Balance','sho','tri trap abs fore',20,{t:90,h:90,a:[90,90],l:[-90,-90],f:null,fl:0,pr:[['wall','ft',-9]]});
+E('neghspu','Negative handstand push-up','push','reps',2.5,'Control','sho tri','trap che abs',3,{t:90,h:90,a:[20,100],l:[-90,-90],f:null,fl:0,pr:[['wall','ft',-9]]});
+E('wallhspu','Wall handstand push-up','push','reps',3,'Strength','sho tri','trap che abs',3,{t:90,h:90,a:[5,92],l:[-90,-90],f:null,fl:0,pr:[['wall','ft',-9]]});
+E('hs','Freestanding handstand','push','sec',3,'Balance','sho','fore tri trap abs',10,{t:90,h:90,a:[90,90],l:[-93,-87],f:null,fl:0});
+E('hspu','Handstand push-up','push','reps',4,'Strength','sho tri','trap che abs fore',1,{t:84,h:90,a:[15,96],l:[-98,-94],f:null,fl:0});
+E('support','Support hold','push','sec',1,'Endurance','tri sho','che abs',20,{t:-90,a:[78,96],l:[90,92],fl:6,pr:PB});
+// ---- planche
+E('plean','Planche lean','push','sec',2,'Skill hold','sho','che abs fore bic',15,{t:-23,a:[112,112],l:[157,157],f:-110,fl:0});
+E('frog','Frog stand','push','sec',1.5,'Balance','sho fore','tri abs',15,{t:25,h:10,a:[120,80],l:[54,-160],f:null,fl:0});
+E('tuckpl','Tuck planche','push','sec',3,'Skill hold','sho','che abs bic fore',8,{t:0,h:-10,a:[105,105],l:[30,170],f:null,fl:0});
+E('advpl','Advanced tuck planche','push','sec',3.5,'Skill hold','sho','che abs bic fore low',6,{t:0,h:-10,a:[107,107],l:[75,180],f:null,fl:0});
+E('strpl','Straddle planche','push','sec',4,'Skill hold','sho','che abs bic fore low glu',4,{t:-4,h:-12,a:[109,109],l:[178,178],l2:[169,169],f:null,f2:null,fl:0});
+E('planche','Planche','push','sec',4.5,'Skill hold','sho','che abs bic fore low glu',2,{t:-3,h:-12,a:[111,111],l:[180,180],f:null,fl:0});
+// ---- legs
+E('squat','Squat','legs','reps',0.5,'Strength','quad glu','ham calf low',15,{t:-68,a:[-8,-8],l:[-8,108],f:0,fl:0});
+E('lunge','Lunge','legs','reps',1,'Strength','quad glu','ham calf',10,{t:-88,a:[95,85],l:[10,95],l2:[110,167],f:0,f2:-100,fl:0});
+E('stepup','Step-up','legs','reps',1,'Strength','quad glu','ham calf',10,{t:-85,a:[100,80],l:[20,90],l2:[92,90],f:0,f2:0,fl:0,pr:[['box','ft']]});
+E('bulg','Bulgarian split squat','legs','reps',1.5,'Strength','quad glu','ham calf abs',8,{t:-82,a:[95,85],l:[5,95],l2:[115,200],f:0,f2:null,fl:0,pr:[['box','ft2']]});
+E('apistol','Assisted pistol squat','legs','reps',2,'Control','quad glu','ham abs calf',4,{t:-65,a:[-25,-15],l:[-20,105],l2:[5,5],f:0,fl:0,pr:[['post','hd']]});
+E('boxpistol','Box pistol squat','legs','reps',2.5,'Strength','quad glu','ham abs calf',4,{t:-75,a:[-5,-5],l:[0,90],l2:[12,12],f:0,fl:0,pr:[['box','hip']]});
+E('pistol','Pistol squat','legs','reps',3,'Balance','quad glu','ham abs calf',2,{t:-58,a:[-5,-5],l:[-20,105],l2:[5,5],f:0,fl:0});
+E('wallsit','Wall sit','legs','sec',1,'Endurance','quad','glu calf',30,{t:-90,a:[90,90],l:[0,90],f:0,fl:0,pr:[['wall','hip',-4]]});
+E('bridge','Glute bridge','legs','reps',0.5,'Strength','glu ham','low abs',12,{t:150,h:175,a:[25,5],l:[-15,95],f:0,fl:0});
+E('nordic','Nordic curl','legs','reps',3.5,'Strength','ham','glu calf low',3,{t:-45,a:[40,-30],l:[135,180],f:null,fl:0});
+E('calf','Calf raise','legs','reps',0.5,'Endurance','calf','',15,{t:-90,a:[90,90],l:[90,90],f:58,fl:5});
+// ---- core
+E('plank','Plank','core','sec',1,'Endurance','abs','sho low glu',30,{t:-12,a:[90,0],l:[168,168],f:-110,fl:0});
+E('hollow','Hollow hold','core','sec',1.5,'Skill hold','abs','quad low',20,{t:-165,h:-160,a:[-160,-160],l:[-12,-12],fl:0});
+E('lraise','Lying leg raise','core','reps',1.5,'Strength','abs','quad',10,{t:180,a:[0,0],l:[-80,-80],f:null,fl:0});
+E('hknee','Hanging knee raise','core','reps',1.5,'Strength','abs','fore lat',8,{t:-90,a:[-90,-90],l:[-5,95],pr:BAR});
+E('hleg','Hanging leg raise','core','reps',2.5,'Strength','abs','fore lat quad',6,{t:-90,a:[-90,-90],l:[0,0],pr:BAR});
+E('t2b','Toes to bar','core','reps',3,'Strength','abs','lat fore quad',4,{t:-120,a:[-65,-65],l:[-86,-86],f:null,pr:BAR});
+E('tucksit','Tuck sit','core','sec',2,'Skill hold','abs','tri sho quad',10,{t:-90,a:[90,90],l:[-50,60],f:null,fl:10,pr:PB});
+E('onel','One-leg L-sit','core','sec',2.5,'Skill hold','abs quad','tri sho',8,{t:-90,a:[90,90],l:[0,0],l2:[-50,60],f2:null,fl:10,pr:PB});
+E('lsit','L-sit','core','sec',3,'Skill hold','abs quad','tri sho',8,{t:-90,a:[90,90],l:[0,0],fl:10,pr:PB});
+E('vsit','V-sit','core','sec',4,'Skill hold','abs quad','tri sho low',3,{t:-108,a:[82,82],l:[-48,-48],fl:10,pr:PB});
+E('tuckdf','Tuck dragon flag','core','reps',3,'Control','abs','lat low glu',4,{t:150,h:180,a:[180,-150],l:[-100,30],f:null,fl:0});
+E('negdf','Negative dragon flag','core','reps',3.5,'Control','abs','lat low glu',3,{t:130,h:180,a:[180,-150],l:[-50,-50],f:null,fl:0});
+E('df','Dragon flag','core','reps',4,'Strength','abs','lat low glu',2,{t:155,h:180,a:[180,-150],l:[-25,-25],f:null,fl:0});
+
+// ---- more push
+E('wallpush','Wall push-up','push','reps',.5,'Strength','che tri','sho',12,{t:-76,a:[-6,-6],l:[104,104],f:0,fl:0,pr:[['wall','hd',1]]});
+E('kneepush','Knee push-up','push','reps',.5,'Strength','che tri','sho abs',10,{t:-37,a:[90,90],l:[143,-160],f:null,fl:0});
+E('widepush','Wide push-up','push','reps',1,'Strength','che','tri sho abs',10,{t:-23,a:[110,75],l:[157,157],f:-110,fl:0});
+E('shouldertap','Shoulder tap','push','reps',1.5,'Control','sho abs','che tri',12,{t:-24,a:[90,90],a2:[55,160],l:[156,156],f:-110,fl:0});
+E('decline','Decline push-up','push','reps',1.5,'Strength','che sho','tri abs',8,{t:-11,a:[90,90],l:[169,169],f:-110,fl:0,pr:[['box','ft']]});
+E('benchdip','Bench dip','push','reps',1,'Strength','tri','sho che',10,{t:-85,a:[170,95],l:[20,30],f:-60,fl:0,pr:[['box','hd']]});
+E('hindu','Hindu push-up','push','reps',2,'Mobility','sho che','tri abs low',8,'pike');
+E('sphinx','Sphinx push-up','push','reps',2,'Strength','tri','sho abs che',6,'plank');
+E('clap','Clap push-up','push','reps',2.5,'Explosive power','che tri','sho abs',5,{t:-20,a:[20,140],l:[160,160],f:-110,fl:0});
+E('pppu','Pseudo planche push-up','push','reps',2.5,'Strength','sho che','tri abs bic',6,{t:-17,a:[150,95],l:[163,163],f:-110,fl:0});
+E('typewriter','Typewriter push-up','push','reps',3,'Strength','che tri','sho abs',4,'archer');
+E('headstand','Headstand','push','sec',1.5,'Balance','sho','abs trap tri',20,{t:90,h:90,a:[30,150],l:[-90,-90],f:null,fl:0});
+E('wallwalk','Wall walk','push','reps',2.5,'Control','sho','tri abs trap',3,'wallhs');
+E('elbowlever','Elbow lever','push','sec',2.5,'Balance','low abs','sho fore glu',8,{t:0,h:-10,a:[160,90],l:[180,180],f:null,fl:0});
+E('tuckplpu','Tuck planche push-up','push','reps',4,'Strength','sho tri','che abs bic fore',3,{t:0,h:-10,a:[150,95],l:[30,170],f:null,fl:0});
+E('planchepu','Planche push-up','push','reps',5,'Strength','sho tri','che abs bic fore low glu',1,{t:-3,h:-12,a:[150,95],l:[180,180],f:null,fl:0});
+E('ninety','90-degree push-up','push','reps',5,'Strength','sho tri','che abs trap low',1,'planchepu');
+E('onehs','One-arm handstand','push','sec',5,'Balance','sho','fore tri trap abs',3,{t:90,h:90,a:[90,90],a2:[165,172],l:[-93,-87],f:null,fl:0});
+// ---- more pull
+E('flexhang','Flexed-arm hang','pull','sec',1.5,'Endurance','bic lat','fore trap',15,'pullup');
+E('onehang','One-arm dead hang','pull','sec',2,'Endurance','fore','lat sho',10,{t:-90,a:[-96,-87],a2:[96,86],l:[90,90],pr:BAR});
+E('erow','Feet-elevated row','pull','reps',1.5,'Strength','lat trap','bic fore abs glu',8,{t:-8,a:[-90,-90],l:[172,172],f:-100,fl:14,pr:[['pbar','hd'],['box','ft']]});
+E('widepull','Wide pull-up','pull','reps',2.5,'Strength','lat','trap bic fore',4,'pullup');
+E('lpull','L-sit pull-up','pull','reps',3,'Strength','lat bic abs','trap fore quad',3,{t:-90,a:[60,-75],l:[0,0],pr:BAR});
+E('archerpull','Archer pull-up','pull','reps',3.5,'Strength','lat bic','trap fore abs',3,{t:-92,a:[60,-75],a2:[-48,-44],l:[85,95],pr:BAR});
+E('typepull','Typewriter pull-up','pull','reps',3.5,'Control','lat bic','trap fore abs',2,'c2b');
+E('onepull','One-arm pull-up','pull','reps',4.5,'Strength','lat bic','fore trap abs',1,{t:-90,a:[60,-75],a2:[102,80],l:[85,95],pr:BAR});
+E('skincat','Skin the cat','pull','reps',2.5,'Mobility','sho lat','abs fore bic',3,{t:90,h:90,a:[-80,-80],l:[140,20],f:null,pr:BAR});
+E('tuckbl','Tuck back lever','pull','sec',2.5,'Skill hold','sho low','bic lat glu fore',8,{t:0,h:-8,a:[-110,-110],l:[40,170],f:null,pr:BAR});
+E('backlever','Back lever','pull','sec',3.5,'Skill hold','sho low','bic lat glu ham fore',5,{t:0,h:-8,a:[-110,-110],l:[180,180],pr:BAR});
+E('flraise','Front lever raise','pull','reps',4,'Control','lat abs','trap fore sho',3,{t:150,h:155,a:[-78,-78],l:[-30,-30],pr:BAR});
+E('flpull','Front lever pull-up','pull','reps',5,'Strength','lat trap abs','bic fore sho glu',1,{t:180,a:[-40,-100],l:[0,0],pr:BAR});
+// ---- more legs
+E('deepsquat','Deep squat hold','legs','sec',.5,'Mobility','quad glu','calf low',30,{t:-75,a:[20,-20],l:[-40,100],f:0,fl:0});
+E('revlunge','Reverse lunge','legs','reps',1,'Strength','quad glu','ham calf',10,'lunge');
+E('jumpsquat','Jump squat','legs','reps',1,'Explosive power','quad glu','calf ham',10,{t:-88,a:[-70,-80],l:[95,85],f:40,fl:9});
+E('sbridge','Single-leg glute bridge','legs','reps',1,'Strength','glu ham','low abs',8,{t:150,h:175,a:[25,5],l:[-15,95],l2:[-30,-30],f:0,fl:0});
+E('scalf','Single-leg calf raise','legs','reps',1,'Strength','calf','',10,{t:-90,a:[90,90],l:[90,90],l2:[80,170],f:58,f2:null,fl:5});
+E('cossack','Cossack squat','legs','reps',1.5,'Mobility','quad glu','ham calf',6,{t:-68,a:[-8,-8],l:[-8,108],l2:[25,25],f:0,f2:-60,fl:0});
+E('rdl','Single-leg Romanian deadlift','legs','reps',1.5,'Balance','ham glu','low calf',8,{t:-10,h:-5,a:[90,90],l:[90,90],l2:[175,175],f:0,f2:null,fl:0});
+E('boxjump','Box jump','legs','reps',1.5,'Explosive power','quad glu','calf ham',6,{t:-60,a:[120,100],l:[-10,100],f:0,fl:16,pr:[['box','ft']]});
+E('tuckjump','Tuck jump','legs','reps',1.5,'Explosive power','quad glu','calf abs',8,{t:-85,a:[-60,-70],l:[-30,100],f:20,fl:12});
+E('burpee','Burpee','legs','reps',1.5,'Endurance','quad che','sho tri abs glu',8,'pushup');
+E('swallsit','Single-leg wall sit','legs','sec',2,'Endurance','quad','glu calf',15,{t:-90,a:[90,90],l:[0,90],l2:[0,0],f:0,fl:0,pr:[['wall','hip',-4]]});
+E('sissy','Sissy squat','legs','reps',2.5,'Strength','quad','abs calf',5,{t:-135,a:[-20,-20],l:[40,150],f:20,fl:0});
+E('negnordic','Negative Nordic curl','legs','reps',2.5,'Control','ham','glu calf low',4,'nordic');
+E('shrimp','Shrimp squat','legs','reps',3,'Balance','quad glu','ham abs calf',3,{t:-55,a:[-5,-5],l:[-10,105],l2:[125,-160],f:0,f2:null,fl:0});
+// ---- more core
+E('deadbug','Dead bug','core','reps',.5,'Control','abs','low',10,{t:180,a:[-90,-90],l:[-90,0],f:null,fl:0});
+E('birddog','Bird dog','core','reps',.5,'Control','low abs','glu sho',10,{t:-17,a:[90,90],a2:[-12,-12],l:[90,180],l2:[180,180],f:null,f2:null,fl:0});
+E('superman','Superman hold','core','sec',.5,'Endurance','low','glu trap ham',20,{t:-12,h:-25,a:[-15,-15],l:[188,188],f:null,fl:0});
+E('crunch','Crunch','core','reps',.5,'Strength','abs','',15,{t:-160,h:-150,a:[-150,-60],l:[-45,45],f:0,fl:0});
+E('situp','Sit-up','core','reps',1,'Strength','abs','quad',12,{t:-120,a:[20,10],l:[-45,45],f:0,fl:0});
+E('bicycle','Bicycle crunch','core','reps',1,'Endurance','abs','quad',16,{t:-160,h:-150,a:[-150,-60],l:[-70,20],l2:[-15,-15],f:null,fl:0});
+E('flutter','Flutter kicks','core','sec',1,'Endurance','abs','quad',20,{t:180,a:[0,0],l:[-12,-12],l2:[-28,-28],fl:0});
+E('revcrunch','Reverse crunch','core','reps',1,'Strength','abs','low',10,{t:180,a:[0,0],l:[-110,0],f:null,fl:0});
+E('russian','Russian twist','core','reps',1,'Control','abs','low quad',16,{t:-125,a:[10,-10],l:[-30,20],f:null,fl:0});
+E('sideplank','Side plank','core','sec',1,'Endurance','abs','sho glu low',20,{t:-12,a:[90,0],a2:[-90,-90],l:[168,168],f:-110,fl:0});
+E('mountain','Mountain climber','core','reps',1,'Endurance','abs','sho quad che',20,{t:-24,a:[90,90],l:[156,156],l2:[40,150],f:-110,f2:null,fl:0});
+E('bear','Bear crawl','core','sec',1,'Endurance','abs sho','quad tri',20,{t:-10,a:[90,90],l:[80,165],f:-110,fl:0});
+E('vup','V-up','core','reps',2,'Strength','abs','quad',8,{t:-140,a:[-40,-40],l:[-40,-40],fl:0});
+E('hollowrock','Hollow rock','core','reps',2,'Control','abs','quad low',12,'hollow');
+E('longplank','Long-lever plank','core','sec',2,'Strength','abs','sho lat low',15,{t:-10,a:[25,25],l:[170,170],f:-110,fl:0});
+E('lhang','Hanging L hold','core','sec',2.5,'Skill hold','abs quad','fore lat',8,'hleg');
+E('straddlel','Straddle L-sit','core','sec',3,'Skill hold','abs quad','tri sho',6,{t:-90,a:[90,90],l:[4,4],l2:[-12,-12],fl:10,pr:PB});
+E('wipers','Windshield wipers','core','reps',3.5,'Control','abs','lat fore sho',4,'t2b');
+E('flag','Human flag','core','sec',4.5,'Skill hold','abs sho lat','fore tri glu low',3,{t:180,h:180,a:[-140,-140],a2:[140,140],l:[0,0],f:null,pr:[['pole','hd']]});
+
+// ---- short explanations shown when you open a move
+const DESC={
+hang:'Hang from the bar with straight arms and let your body go long. Builds the grip and shoulder tolerance every bar move needs.',
+scap:'From a dead hang, pull your shoulder blades down and back without bending your elbows, then lower. Small movement, done slowly.',
+row:'Lie under a waist-high bar, body in a straight line, and pull your chest to the bar. Walk your feet forward to make it harder.',
+negpull:'Jump or step to the top of a pull-up, then lower yourself as slowly as you can. Aim for three to five seconds on the way down.',
+pullup:'Hang with palms facing away and pull until your chin clears the bar. Start each rep from straight arms and avoid swinging.',
+chinup:'A pull-up with palms facing you. The biceps do more of the work, so most people find it slightly easier.',
+c2b:'Pull high enough that your chest touches the bar. Lean back a little and drive your elbows down and behind you.',
+highpull:'Pull as fast and as high as you can, aiming to get the bar to your lower chest or waist. This is the power the muscle-up needs.',
+negmu:'Start on top of the bar in support and lower slowly through the dip and the turn-over into a hang. Teaches the transition.',
+muscleup:'An explosive pull that carries your chest over the bar, followed by a dip to straight arms. Pull toward your hips, not your chin.',
+tuckfl:'Hang, then raise your body until your back is level with the floor, knees pulled tight to your chest. Keep your arms straight.',
+advfl:'A tuck front lever with a flat back and hips at a right angle, so your knees sit above your hips instead of against your chest.',
+onefl:'A front lever with one leg straight and the other tucked. Swap legs between sets.',
+strfl:'A front lever with both legs straight and spread wide. The wider the legs, the easier the hold.',
+fl:'Hold your whole body straight and level under the bar, facing up, with straight arms. Squeeze glutes and push the bar toward your hips.',
+incpush:'A push-up with your hands on a bench or box. The higher the hands, the easier it is.',
+pushup:'Hands under shoulders, body in one straight line. Lower until your chest is just off the floor, then press back up.',
+diamond:'A push-up with your hands together under your chest, thumbs and forefingers touching. Shifts the work to the triceps.',
+archer:'A wide push-up where you bend one arm and keep the other nearly straight out to the side, shifting your weight over the bent arm.',
+incone:'A one-arm push-up with your hand on a bench. Keep your hips square and feet wide.',
+onepush:'A push-up on one arm with the other behind your back. Set your feet wide and keep your hips from twisting.',
+dip:'Support yourself on parallel bars and lower until your shoulders are just below your elbows, then press up.',
+sbdip:'A dip on top of a single straight bar, hands in front of your hips. Lean forward as you lower. This is the top half of a muscle-up.',
+pike:'Hips high in an upside-down V, lower the top of your head toward the floor between your hands, then press up.',
+epike:'A pike push-up with your feet on a box, which puts more of your weight over your shoulders.',
+wallhs:'Kick up or walk your feet up a wall and hold with straight arms, ribs pulled in and toes pointed.',
+neghspu:'From a wall handstand, lower your head to the floor as slowly as you can, then come down and reset.',
+wallhspu:'From a wall handstand, lower until your head touches the floor and press back to straight arms.',
+hs:'Balance on your hands without a wall. Stack hips over shoulders over wrists and make corrections with your fingers.',
+hspu:'A full handstand push-up without a wall: lower your head to the floor and press back up while keeping balance.',
+support:'Hold yourself on straight arms on parallel bars, shoulders pushed down away from your ears.',
+plean:'From the top of a push-up, lean forward so your shoulders move well past your wrists, arms locked. Hold the lean.',
+frog:'Squat, place your hands on the floor, rest your knees on your elbows and tip forward until your feet lift.',
+tuckpl:'On straight arms, lean forward and lift your feet with knees tucked to your chest, hips level with your shoulders.',
+advpl:'A tuck planche with a flat back and your knees moved back behind your hips.',
+strpl:'A planche with both legs straight and spread wide to shorten the lever.',
+planche:'Hold your whole body straight and level above the floor on straight arms, feet off the ground.',
+squat:'Feet about shoulder width, sit down and back until your hips are below your knees, then stand.',
+lunge:'Step forward and lower until both knees are bent to a right angle, then push back to standing. Count each side.',
+stepup:'Place one foot on a box and stand up using that leg alone, then lower with control.',
+bulg:'A split squat with your back foot resting on a bench behind you. Most of the work is in the front leg.',
+apistol:'A one-leg squat while holding a post or door frame for balance. Use your arms as little as you can.',
+boxpistol:'Sit back on one leg onto a box, pause, and stand up without the other foot touching down. Lower the box over time.',
+pistol:'A full squat on one leg with the other held straight out in front. Reach your arms forward to balance.',
+wallsit:'Back flat against a wall, thighs level with the floor, and hold.',
+bridge:'Lie on your back with knees bent, then drive your hips up until your body is straight from knees to shoulders.',
+nordic:'Kneel with your ankles held down, then lower your straight body toward the floor and pull yourself back up with your hamstrings.',
+calf:'Rise onto the balls of your feet as high as you can, pause, and lower slowly. A step lets your heels drop lower.',
+plank:'Rest on forearms and toes with your body in one straight line. Tuck your hips slightly and do not let them sag.',
+hollow:'Lie on your back, press your lower back into the floor and lift your shoulders and legs a few inches. Arms overhead.',
+lraise:'Lie on your back and raise straight legs until they point at the ceiling, then lower without letting your back arch.',
+hknee:'Hang from the bar and raise your knees to your chest without swinging.',
+hleg:'Hang from the bar and raise straight legs until they are level with the floor.',
+t2b:'Hang from the bar and raise straight legs all the way until your toes touch it.',
+tucksit:'Support yourself on parallel bars or the floor and lift your feet with knees tucked to your chest.',
+onel:'An L-sit with one leg straight and the other tucked. Swap legs between sets.',
+lsit:'Support yourself on your hands and hold both legs straight out in front, level with the floor.',
+vsit:'From an L-sit, lean back slightly and lift your straight legs toward your face until your body makes a V.',
+tuckdf:'Lie on a bench gripping it behind your head, lift your body onto your shoulders with knees tucked, and lower slowly.',
+negdf:'Start a dragon flag from the top, body straight and vertical, and lower as slowly as you can.',
+df:'Gripping a bench or post behind your head, raise and lower your rigid body with only your shoulders touching down.',
+wallpush:'Stand at arm\'s length from a wall and do a push-up against it. A first step if floor push-ups are not there yet.',
+kneepush:'A push-up from your knees. Keep a straight line from knees to shoulders.',
+widepush:'A push-up with hands set wider than your shoulders, which puts more work on the chest.',
+shouldertap:'Hold the top of a push-up and tap each shoulder with the opposite hand without letting your hips rock. Count each tap.',
+decline:'A push-up with your feet on a box. More of your weight goes through your shoulders and upper chest.',
+benchdip:'Hands on a bench behind you, heels on the floor, lower your hips by bending your elbows and press back up.',
+hindu:'Start in a pike, swoop your chest down and through between your hands into an arch, then push back to the pike.',
+sphinx:'From a forearm plank, press through your palms until your arms are straight, then lower your elbows back down.',
+clap:'Push up hard enough that your hands leave the floor, clap, and land with soft elbows.',
+pppu:'A push-up with your hands turned out by your waist and shoulders leaning well forward of them.',
+typewriter:'Lower to one side in a wide push-up, slide your chest across to the other hand while staying low, then press up.',
+headstand:'Balance on your head and hands or forearms with legs straight up. Most of the weight should be on your arms.',
+wallwalk:'From a push-up with feet at a wall, walk your feet up and hands in until your chest reaches the wall, then walk back down.',
+elbowlever:'Dig your elbows into your sides, lean forward and balance your straight body level on your hands.',
+tuckplpu:'Hold a tuck planche and bend your arms to lower, then press back up without your feet touching.',
+planchepu:'Hold a full planche and do a push-up in it, body level and feet never touching the floor.',
+ninety:'From a handstand, lower into a bent-arm planche with your body level, then press back up to a handstand.',
+onehs:'A freestanding handstand balanced on one arm, the other held out to the side.',
+flexhang:'Hold the top of a pull-up with your chin over the bar for time.',
+onehang:'A dead hang from one arm. Keep the shoulder active and swap sides between sets.',
+erow:'An Australian row with your feet up on a box, so your body is level and you lift more of your weight.',
+widepull:'A pull-up with hands set well outside your shoulders. Shorter range, more work for the lats.',
+lpull:'A pull-up while holding your legs straight out in front in an L.',
+archerpull:'A wide pull-up where you pull toward one hand while the other arm stays nearly straight along the bar.',
+typepull:'Pull to the top, then travel side to side along the bar from one hand to the other before lowering.',
+onepull:'A full pull-up from a dead hang using one arm.',
+skincat:'From a hang, lift your legs through your arms and rotate backward until you are hanging behind the bar, then return.',
+tuckbl:'Hanging face down behind the bar, hold your back level with the floor and knees tucked to your chest.',
+backlever:'Hold your straight body level with the floor, face down, hanging from the bar behind you with straight arms.',
+flraise:'From a dead hang with straight arms, raise your rigid body to a front lever and lower it back down.',
+flpull:'Hold a front lever and pull your waist to the bar while keeping your body level.',
+deepsquat:'Sit in the bottom of a squat with heels down and chest up. Good for ankle and hip mobility.',
+revlunge:'Step backward into a lunge and return. Easier on the knees than stepping forward. Count each side.',
+jumpsquat:'Squat down and jump as high as you can, landing softly straight into the next rep.',
+sbridge:'A glute bridge with one leg held straight in the air. Count each side.',
+scalf:'A calf raise on one foot. Hold something for balance and use a step for full range.',
+cossack:'With feet wide, sink over one leg into a deep side squat while the other leg stays straight, then shift across.',
+rdl:'Stand on one leg and hinge forward with a flat back while the free leg rises behind you, then stand tall.',
+boxjump:'Jump from the floor onto a box, land softly with bent knees, and step back down.',
+tuckjump:'Jump and pull your knees up to your chest at the top of each jump.',
+burpee:'Drop to a push-up, do one rep, jump your feet in and jump up with arms overhead.',
+swallsit:'A wall sit with one foot lifted off the floor. Swap legs between sets.',
+sissy:'Rise onto your toes and lean your body back in a straight line from knees to shoulders as your knees travel forward.',
+negnordic:'The lowering half of a Nordic curl: resist the fall as long as you can, catch yourself and push back up.',
+shrimp:'A one-leg squat with the free leg bent behind you until that knee touches the floor.',
+deadbug:'On your back with arms and knees up, lower the opposite arm and leg toward the floor while your lower back stays down.',
+birddog:'On hands and knees, reach one arm forward and the opposite leg back, pause, and swap.',
+superman:'Lie face down and lift your arms, chest and legs off the floor together.',
+crunch:'On your back with knees bent, curl your shoulders off the floor toward your hips and lower.',
+situp:'On your back with knees bent, sit all the way up to your thighs and lower with control.',
+bicycle:'On your back, bring one elbow toward the opposite knee while the other leg extends, alternating sides.',
+flutter:'On your back with legs straight and just off the floor, kick them up and down in small quick beats.',
+revcrunch:'On your back, curl your knees toward your chest until your hips lift off the floor, then lower slowly.',
+russian:'Sit leaning back with feet off the floor and rotate your torso to touch the floor on each side. Count each touch.',
+sideplank:'Rest on one forearm and the side of one foot, body in a straight line. Swap sides between sets.',
+mountain:'From the top of a push-up, drive your knees toward your chest one after the other at a run. Count each knee.',
+bear:'Crawl on hands and feet with knees an inch off the floor and your back flat.',
+vup:'Lie flat, then lift straight legs and torso together and touch your toes at the top.',
+hollowrock:'Hold the hollow position and rock back and forth from shoulders to hips without losing the shape.',
+longplank:'A plank with your hands or elbows walked out well ahead of your shoulders.',
+lhang:'Hang from the bar holding your straight legs level with the floor.',
+straddlel:'An L-sit with legs spread wide and hands placed between them.',
+wipers:'Hang with your legs raised to the bar and sweep them from side to side like a wiper blade.',
+flag:'Grip a vertical pole with one hand high and one low and hold your body straight out sideways, level with the floor.',
+};
+
+// ---- stretches
+E('fwdfold','Standing forward fold','stretch','sec',.5,'Mobility','ham','calf low',30,{t:60,h:70,a:[150,120],l:[90,90],f:0,fl:0});
+E('seatedfold','Seated forward fold','stretch','sec',1,'Mobility','ham','low calf',30,{t:-35,h:-20,a:[20,20],l:[0,0],fl:0});
+E('hamstretch','Lying hamstring stretch','stretch','sec',.5,'Mobility','ham','calf',30,{t:180,a:[-20,-50],l:[-80,-80],l2:[0,0],f:null,fl:0});
+E('butterfly','Butterfly stretch','stretch','sec',.5,'Mobility','glu','low ham',30,{t:-85,a:[70,30],l:[-25,150],f:null,fl:0});
+E('hipflexor','Hip flexor stretch','stretch','sec',.5,'Mobility','quad','glu abs',30,{t:-90,a:[95,85],l:[5,95],l2:[115,175],f:0,f2:null,fl:0});
+E('pigeon','Pigeon pose','stretch','sec',1,'Mobility','glu','low ham',30,{t:-80,a:[100,80],l:[10,170],l2:[178,178],f:null,f2:null,fl:0});
+E('quadstretch','Standing quad stretch','stretch','sec',.5,'Mobility','quad','',30,{t:-90,a:[110,70],l:[90,90],l2:[100,-80],f:0,f2:null,fl:0});
+E('calfstretch','Wall calf stretch','stretch','sec',.5,'Mobility','calf','',30,'wallpush');
+E('ankle','Knee-to-wall ankle stretch','stretch','sec',.5,'Mobility','calf','',30,'hipflexor');
+E('downdog','Downward dog','stretch','sec',1,'Mobility','ham calf','sho lat low',30,'pike');
+E('cobra','Cobra stretch','stretch','sec',.5,'Mobility','abs','quad che',30,{t:-50,h:-70,a:[40,130],l:[180,180],f:null,fl:0});
+E('childs',"Child's pose",'stretch','sec',.5,'Mobility','low lat','sho glu',30,{t:10,h:20,a:[8,8],l:[30,180],f:null,fl:0});
+E('latstretch','Kneeling lat stretch','stretch','sec',.5,'Mobility','lat','tri sho',30,'childs');
+E('catcow','Cat-cow','stretch','reps',.5,'Mobility','low abs','trap',10,{t:-17,a:[90,90],l:[90,180],f:null,fl:0});
+E('wristext','Wrist stretch','stretch','sec',.5,'Mobility','fore','',30,'catcow');
+E('chestdoor','Doorway chest stretch','stretch','sec',.5,'Mobility','che','sho bic',30,{t:-90,a:[175,-95],l:[94,90],l2:[78,96],f:0,f2:0,fl:0,pr:[['post','hd']]});
+E('shoulderext','Seated shoulder extension','stretch','sec',1,'Mobility','sho','che bic',20,{t:-100,a:[130,100],l:[0,0],fl:0});
+E('tristretch','Overhead triceps stretch','stretch','sec',.5,'Mobility','tri','lat sho',30,{t:-90,a:[-80,100],l:[90,90],f:0,fl:0});
+E('crossbody','Cross-body shoulder stretch','stretch','sec',.5,'Mobility','sho','trap',30,{t:-90,a:[5,5],a2:[40,-60],l:[90,90],f:0,fl:0});
+E('jefferson','Jefferson curl','stretch','reps',1.5,'Mobility','ham low','calf trap',6,'fwdfold');
+E('pancake','Pancake stretch','stretch','sec',2,'Mobility','ham glu','low',30,{t:-25,h:-10,a:[10,10],l:[5,5],l2:[-12,-12],fl:0});
+E('frontsplit','Front split','stretch','sec',2.5,'Mobility','ham quad','glu calf',20,{t:-90,a:[80,95],l:[2,2],l2:[178,178],f2:null,fl:0});
+E('backbridge','Back bridge','stretch','sec',2.5,'Mobility','sho abs','quad low glu che',15,{t:160,h:120,a:[100,95],l:[70,100],f:0,fl:0});
+Object.assign(DESC,{
+fwdfold:'Stand tall, hinge at the hips and let your upper body hang toward the floor. Bend your knees a little if your lower back rounds hard.',
+seatedfold:'Sit with legs straight in front and reach your chest toward your thighs. Lead with your chest, not your head.',
+hamstretch:'Lie on your back, raise one straight leg and pull it gently toward you with both hands. Swap sides.',
+butterfly:'Sit with the soles of your feet together and let your knees fall outward. Sit tall, or lean forward for more.',
+hipflexor:'Kneel in a lunge with the back knee down, tuck your hips under and shift forward until the front of the back hip opens. Swap sides.',
+pigeon:'From all fours, bring one shin across in front of you and slide the other leg straight back. Lower your hips, then swap sides.',
+quadstretch:'Stand on one leg and pull the other heel toward your glute, keeping your knees together. Swap sides.',
+calfstretch:'Hands on a wall, step one leg back with the heel pressed down and the knee straight. Swap sides.',
+ankle:'In a half-kneel facing a wall, drive the front knee forward over your toes without the heel lifting. Swap sides.',
+downdog:'From hands and feet, push your hips up and back into an upside-down V and press your heels toward the floor.',
+cobra:'Lie face down, hands under your shoulders, and press your chest up while your hips stay on the floor.',
+childs:'Kneel, sit back onto your heels and fold forward with your arms stretched out along the floor.',
+latstretch:'Kneel in front of a bench, place your elbows or hands on it and sink your chest toward the floor.',
+catcow:'On hands and knees, slowly round your back up toward the ceiling, then let it sink and lift your chest. Each round trip is one rep.',
+wristext:'On hands and knees, turn your fingers back toward your knees and rock gently backward. Then repeat on the backs of your hands.',
+chestdoor:'Place your forearm on a door frame at shoulder height and turn your body away until the chest opens. Swap sides.',
+shoulderext:'Sit with your hands on the floor behind you, fingers pointing back, and slide your hips forward until the front of the shoulders opens.',
+tristretch:'Reach one arm overhead, bend the elbow so the hand drops behind your head, and ease the elbow back with the other hand. Swap sides.',
+crossbody:'Bring one straight arm across your chest and hug it in with the other forearm. Swap sides.',
+jefferson:'Stand tall and roll down one vertebra at a time until you hang in a forward fold, then roll back up just as slowly.',
+pancake:'Sit with legs spread wide and walk your hands forward, bringing your chest toward the floor with a flat back.',
+frontsplit:'One leg straight in front, one straight behind, hips square, lowering toward the floor. Use blocks under your hands while you build it.',
+backbridge:'Lie on your back, hands by your ears and feet flat, then press up into an arch with straight arms.',
+});
+
+// solid-set mark: the reps or seconds that earn a move its full value (defaults to the usual set)
+const REF={squat:25,lunge:14,calf:25,bridge:20,crunch:25,situp:20,bicycle:30,russian:30,mountain:30,jumpsquat:15,wallpush:20,kneepush:15,incpush:15,pushup:15,widepush:12,benchdip:15,shouldertap:20,decline:12,diamond:10,row:10,erow:8,scap:10,stepup:14,revlunge:14,sbridge:12,scalf:15,deadbug:14,birddog:14,revcrunch:14,lraise:12,hknee:10,cossack:8,rdl:10,boxjump:8,tuckjump:10,burpee:12,vup:10,hollowrock:15,hindu:10,sphinx:8,pike:10,epike:8,bulg:10,pullup:6,chinup:6,negpull:5,dip:8,sbdip:6,c2b:5,widepull:5,clap:6,pppu:8,archer:6,typewriter:5,incone:5,apistol:5,boxpistol:5,pistol:4,shrimp:4,sissy:6,negnordic:5,nordic:3,hleg:6,t2b:5,wipers:5,highpull:4,negmu:3,muscleup:3,lpull:4,archerpull:4,typepull:3,onepull:2,onepush:3,wallwalk:4,neghspu:4,wallhspu:4,hspu:3,ninety:2,planchepu:2,tuckplpu:3,flraise:3,flpull:2,skincat:4,tuckdf:5,negdf:4,df:3,catcow:12,jefferson:8,
+ hang:40,onehang:15,flexhang:20,plank:60,sideplank:40,longplank:20,hollow:30,superman:30,flutter:30,bear:30,wallsit:45,swallsit:20,deepsquat:60,support:30,wallhs:30,headstand:30,hs:15,onehs:5,frog:20,elbowlever:10,plean:20,tuckpl:10,advpl:8,strpl:5,planche:4,tuckfl:10,advfl:8,onefl:6,strfl:5,fl:5,tuckbl:10,backlever:6,tucksit:15,onel:10,lsit:10,straddlel:8,vsit:5,lhang:10,flag:4,
+ fwdfold:45,seatedfold:45,hamstretch:45,butterfly:45,hipflexor:45,pigeon:45,quadstretch:45,calfstretch:45,ankle:45,downdog:45,cobra:45,childs:60,latstretch:45,wristext:45,chestdoor:45,shoulderext:30,tristretch:45,crossbody:45,pancake:45,frontsplit:30,backbridge:20};
+for(const k in B)B[k].ref=REF[k]||B[k].def;
+// extra categories, only where a move truly belongs to more than one
+const G2={muscleup:['push'],negmu:['push'],burpee:['push','core'],bear:['push'],shouldertap:['core'],flag:['pull','push'],lpull:['core'],
+ tuckfl:['core'],advfl:['core'],onefl:['core'],strfl:['core'],fl:['core'],flraise:['core'],flpull:['core'],tuckbl:['core'],backlever:['core'],
+ plean:['core'],tuckpl:['core'],advpl:['core'],strpl:['core'],planche:['core'],tuckplpu:['core'],planchepu:['core'],elbowlever:['core'],
+ tucksit:['push'],onel:['push'],lsit:['push'],straddlel:['push'],vsit:['push'],hknee:['pull'],hleg:['pull'],lhang:['pull'],t2b:['pull'],wipers:['pull'],
+ hang:['stretch'],skincat:['stretch'],deepsquat:['stretch'],cossack:['stretch'],hindu:['stretch'],downdog:['push'],backbridge:['push'],jefferson:['legs']};
+for(const k in G2)B[k].g2=G2[k];
+// lead-up ladders used when a move is turned into a project
+const CHAINS=[
+ ['hang','scap','row','negpull','pullup','c2b','highpull','negmu','muscleup'],
+ ['row','pullup','c2b','widepull','archerpull','typepull','onehang','onepull'],
+ ['hang','row','pullup','hknee','hleg','lhang','lpull'],
+ ['pullup','hleg','tuckfl','advfl','onefl','strfl','flraise','fl','flpull'],
+ ['hang','hknee','skincat','tuckbl','backlever'],
+ ['incpush','pushup','diamond','archer','typewriter','incone','onepush'],
+ ['pushup','diamond','decline','clap'],
+ ['pushup','plean','frog','pppu','tuckpl','advpl','tuckplpu','strpl','planche','planchepu'],
+ ['pike','epike','wallhs','wallwalk','neghspu','wallhspu','hs','hspu','ninety'],
+ ['pike','wallhs','wallwalk','hs','hspu','onehs'],
+ ['plank','frog','plean','elbowlever'],
+ ['benchdip','support','dip','sbdip'],
+ ['squat','lunge','stepup','bulg','apistol','boxpistol','pistol'],
+ ['squat','lunge','bulg','cossack','shrimp'],
+ ['squat','wallsit','bulg','sissy'],
+ ['bridge','sbridge','rdl','negnordic','nordic'],
+ ['plank','support','tucksit','onel','lsit','straddlel','vsit'],
+ ['lraise','hknee','hleg','lhang','t2b','wipers'],
+ ['lraise','hollow','hleg','tuckdf','negdf','df'],
+ ['sideplank','pullup','wallhs','hleg','df','flag'],
+ ['seatedfold','hipflexor','pigeon','pancake','frontsplit'],
+ ['cobra','shoulderext','bridge','backbridge'],
+];
+
+const PR=(id,name,color,steps)=>({id,name,color,steps:steps.map(([ex,target])=>({ex,target}))});
+function defaultProjects(){return [
+ PR('p-mu','Muscle-up','rose',[['hang',30],['row',10],['pullup',8],['c2b',5],['sbdip',8],['highpull',5],['negmu',3],['muscleup',1]]),
+ PR('p-hspu','Handstand push-up','orange',[['pike',10],['epike',8],['wallhs',45],['neghspu',5],['wallhspu',5],['hs',20],['hspu',1]]),
+ PR('p-fl','Front lever','cerulean',[['pullup',8],['hleg',8],['tuckfl',15],['advfl',12],['onefl',8],['strfl',6],['fl',5]]),
+ PR('p-pl','Planche','violet',[['pushup',20],['plean',30],['frog',30],['tuckpl',15],['advpl',10],['strpl',6],['planche',3]]),
+ PR('p-pistol','Pistol squat','emerald',[['squat',20],['lunge',12],['stepup',12],['bulg',10],['apistol',6],['boxpistol',5],['pistol',3]]),
+ PR('p-vsit','V-sit','gamboge',[['plank',60],['support',30],['tucksit',20],['onel',15],['lsit',15],['vsit',5]]),
+ PR('p-oap','One-arm push-up','ultra',[['incpush',15],['pushup',20],['diamond',12],['archer',8],['incone',5],['onepush',1]]),
+ PR('p-df','Dragon flag','lime',[['lraise',12],['hollow',40],['hleg',8],['tuckdf',5],['negdf',3],['df',3]]),
+]}
+/* ================= drawing: figures, body map, washes, stars, icons ================= */
+const rad=a=>a*Math.PI/180;
+const PT=(o,a,l)=>[o[0]+l*Math.cos(rad(a)),o[1]+l*Math.sin(rad(a))];
+const LEN={T:28,UA:15,FA:15,TH:22,SH:22,N:10.5,HR:5.8,FT:6};
+function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+function rng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const r1=n=>Math.round(n*10)/10;
+
+const figCache={};
+function figure(key){
+  if(figCache[key])return figCache[key];
+  const p=POSES[key]||POSES.pushup, R=rng(hash(key));
+  const hip=[0,0], sh=PT(hip,p.t,LEN.T), head=PT(sh,p.h??p.t,LEN.N);
+  const limb=(o,a,l1,l2)=>{const m=PT(o,a[0],l1);return[o,m,PT(m,a[1],l2)]};
+  const A=limb(sh,p.a,LEN.UA,LEN.FA), L=limb(hip,p.l,LEN.TH,LEN.SH);
+  const A2=p.a2&&limb(sh,p.a2,LEN.UA,LEN.FA), L2=p.l2&&limb(hip,p.l2,LEN.TH,LEN.SH);
+  const foot=(leg,shin,f)=>f===null?null:[leg[2],PT(leg[2],f===undefined?shin-90:f,LEN.FT)];
+  const F1=foot(L,p.l[1],p.f), F2=L2&&foot(L2,p.l2[1],p.f2);
+  const J={hip,sh,hd:A[2],el:A[1],kn:L[1],ft:L[2],hd2:A2&&A2[2],ft2:L2&&L2[2]};
+  const body=[hip,sh,...A,...L,...(A2||[]),...(L2||[])];
+  const bodyMaxY=Math.max(...body.map(q=>q[1]));
+  const floorY=p.fl!==undefined?bodyMaxY+p.fl:null;
+  const pts=[...body,[head[0]-LEN.HR,head[1]-LEN.HR],[head[0]+LEN.HR,head[1]+LEN.HR]];
+  if(F1)pts.push(F1[1]); if(F2)pts.push(F2[1]);
+  const props=[];
+  for(const [t,j,off] of (p.pr||[])){
+    const q=J[j]||J.hd;
+    if(t==='bar'){props.push(['l',q[0]-14,q[1],q[0]+14,q[1],1.5])}
+    if(t==='pbar'){props.push(['l',q[0]-9,q[1],q[0]+10,q[1],1.5]); if(floorY!==null)props.push(['l',q[0]+7,q[1],q[0]+7,floorY,1])}
+    if(t==='box'){const top=j==='hip'?q[1]+3.5:q[1], x0=j==='hip'?q[0]-13:q[0]-10; props.push(['r',x0,top,20,floorY-top])}
+    if(t==='wall'){const top=Math.min(...pts.map(v=>v[1]))-3; props.push(['l',q[0]+off,floorY,q[0]+off,top,1])}
+    if(t==='pole'){const a=J.hd,b=J.hd2||J.hd;props.push(['l',a[0],Math.min(a[1],b[1])-8,a[0],Math.max(a[1],b[1])+12,1.5])}
+    if(t==='post'){props.push(['l',q[0]+1.5,floorY,q[0]+1.5,q[1]-15,1])}
+  }
+  for(const s of props){ if(s[0]==='l'){pts.push([s[1],s[2]],[s[3],s[4]])} else {pts.push([s[1],s[2]],[s[1]+s[3],s[2]+s[4]])} }
+  let x0=Math.min(...pts.map(v=>v[0])),x1=Math.max(...pts.map(v=>v[0])),y0=Math.min(...pts.map(v=>v[1])),y1=Math.max(...pts.map(v=>v[1]));
+  if(floorY!==null){x0-=5;x1+=5;y1=Math.max(y1,floorY)}
+  const w=x1-x0,h=y1-y0,s=Math.min(80/w,80/h,1.28),tx=50-(x0+w/2)*s,ty=50-(y0+h/2)*s;
+  
+  const wob=(a,b,k)=>{const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2,dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy)||1,o=(R()-.5)*len*k;return `Q${r1(mx-dy/len*o)} ${r1(my+dx/len*o)} ${r1(b[0])} ${r1(b[1])}`};
+  const path=(arr,k=.13)=>{let d=`M${r1(arr[0][0])} ${r1(arr[0][1])}`;for(let i=1;i<arr.length;i++)d+=wob(arr[i-1],arr[i],k);return d};
+  const line=(arr,op=1)=>`<path class="a" d="${path(arr)}" opacity="${op}"/><path class="b" d="${path(arr,.3)}" opacity="${op*.6}"/>`;
+  let o=`<svg class="fig" viewBox="0 0 100 100" aria-hidden="true"><g transform="translate(${r1(tx)} ${r1(ty)}) scale(${s.toFixed(3)})" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">`;
+  // props (muted)
+  o+=`<g opacity=".55">`;
+  if(floorY!==null)o+=`<path class="c" d="${path([[x0,floorY],[x0+w/2,floorY],[x1,floorY]],.02)}"/>`;
+  for(const q of props){
+    if(q[0]==='l')o+=`<path class="${q[5]>1?'a':'c'}" d="M${r1(q[1])} ${r1(q[2])}L${r1(q[3])} ${r1(q[4])}"/>`;
+    else o+=`<rect x="${r1(q[1])}" y="${r1(q[2])}" width="${r1(q[3])}" height="${r1(q[4])}" class="c"/>`;
+  }
+  o+=`</g>`;
+  if(L2){o+=line(L2,.5); if(F2)o+=line(F2,.5)}
+  if(A2)o+=line(A2,.5);
+  o+=line([hip,sh]); o+=line(L); if(F1)o+=line(F1); o+=line(A);
+  o+=`<ellipse cx="${r1(head[0])}" cy="${r1(head[1])}" rx="${LEN.HR}" ry="${r1(LEN.HR*(.94+R()*.12))}" class="a" transform="rotate(${Math.round(R()*40)} ${r1(head[0])} ${r1(head[1])})"/>`;
+  o+=`</g></svg>`;
+  return figCache[key]=o;
+}
+
+/* body map: front + back, blocky */
+const BM_F=[['sho',12,18,9,7],['sho',39,18,9,7],['che',22,18,16,11],['bic',13,26,7,13],['bic',40,26,7,13],['fore',12,40,7,15],['fore',41,40,7,15],['abs',23,30,14,18],['quad',21.5,50,8,23],['quad',30.5,50,8,23],['calf',22.5,75,6.5,19],['calf',31,75,6.5,19]];
+const BM_B=[['sho',72,18,9,7],['sho',99,18,9,7],['trap',82,18,16,8],['lat',82,27,16,11],['tri',73,26,7,13],['tri',100,26,7,13],['fore',72,40,7,15],['fore',101,40,7,15],['low',83,39,14,7],['glu',82,47,16,9.5],['ham',81.5,57.5,8,16.5],['ham',90.5,57.5,8,16.5],['calf',82.5,75,6.5,19],['calf',91,75,6.5,19]];
+function bodyMap(m,p,cls='',pick=false){
+  const c=k=>m.includes(k)?'m':p.includes(k)?'p':'';
+  const rect=([k,x,y,w,h])=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx=".8" class="${c(k)}"${pick?` data-a="musc" data-m="${k}"`:''}><title>${MUSC[k]}</title></rect>`;
+  const big=cls.includes('lg');
+  return `<svg class="bm ${cls}${pick?' pick':''}" viewBox="8 0 104 ${big?108:96}" role="img" aria-label="Muscles worked, shown on the front of the body (left) and the back (right)"><circle cx="30" cy="9" r="6"/><circle cx="90" cy="9" r="6"/>${BM_F.map(rect).join('')}${BM_B.map(rect).join('')}${big?'<text x="30" y="105.500">Front</text><text x="90" y="105.500">Back</text>':''}</svg>`;
+}
+
+/* watercolor washes as cached background images */
+function washSVG(kind,c1,c2,seed){
+  const R=rng(seed*7919+17); let vb,sc,bf,sh='';
+  const el=(cx,cy,rx,ry,c,op)=>`<ellipse cx="${r1(cx)}" cy="${r1(cy)}" rx="${r1(rx)}" ry="${r1(ry)}" fill="${c}" fill-opacity="${op}" stroke="${c}" stroke-opacity=".95" stroke-width="3"/>`;
+  const rc=(x,y,w,h,c,op,rx=18)=>`<rect x="${r1(x)}" y="${r1(y)}" width="${r1(w)}" height="${r1(h)}" rx="${rx}" fill="${c}" fill-opacity="${op}" stroke="${c}" stroke-opacity=".95" stroke-width="3"/>`;
+  if(kind==='blot'){vb='0 0 200 200';sc=44;bf='0.017';
+    sh=el(88+R()*24,92+R()*20,62+R()*12,56+R()*12,c1,.62)+el(64+R()*70,64+R()*70,34+R()*18,30+R()*18,c2,.5)+el(56+R()*88,56+R()*88,18+R()*14,16+R()*12,c1,.7);}
+  if(kind==='col'){vb='0 0 100 300';sc=16;bf='0.05 0.012';
+    sh=rc(10,14,80,330,c1,.82,4)+rc(18,40+R()*120,56,70+R()*80,c2,.4,6);}
+  if(kind==='band'){vb='0 0 600 200';sc=46;bf='0.006 0.022';
+    sh=rc(24+R()*30,44+R()*16,330+R()*120,58+R()*26,c1,.66,30)+rc(150+R()*120,84+R()*20,250+R()*130,46+R()*24,c2,.5,24)+el(80+R()*90,120+R()*20,46,26,c1,.6)+el(430+R()*90,70+R()*30,30,20,c2,.5);}
+  if(kind==='stroke'){vb='0 0 300 100';sc=20;bf='0.012 0.06';
+    sh=rc(10,20,280,60,c1,.82,6)+rc(20+R()*120,30,90+R()*90,40,c2,.42,6);}
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" preserveAspectRatio="none"><defs><filter id="f" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="${bf}" numOctaves="3" seed="${seed+2}" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="${sc}" xChannelSelector="R" yChannelSelector="G" result="d"/><feGaussianBlur in="d" stdDeviation="1.6" result="b"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 2.2 0 0 -0.2" result="pool"/><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="${seed+9}" result="g"/><feColorMatrix in="g" type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0.7 0 0 0 0.62" result="grain"/><feComposite in="b" in2="pool" operator="in" result="p1"/><feComposite in="p1" in2="grain" operator="in"/></filter></defs><g filter="url(#f)">${sh}</g></svg>`;
+}
+function injectWashes(){
+  let css='';
+  for(const k in PIG){const c1=PIG[k],c2=PIG[PIG2[k]];
+    for(let i=0;i<3;i++)css+=`.w-${k}-b${i}{background-image:url("data:image/svg+xml,${encodeURIComponent(washSVG('blot',c1,c2,hash(k)%97+i*11))}")}`;
+    css+=`.w-${k}-band::before,.w-${k}-bandbg{background-image:url("data:image/svg+xml,${encodeURIComponent(washSVG('band',c1,c2,hash(k)%89+5))}")}`;
+    for(let i=0;i<2;i++)css+=`.w-${k}-c${i}{background-image:url("data:image/svg+xml,${encodeURIComponent(washSVG('col',c1,c2,hash(k)%79+i*5))}")}.w-${k}-s${i}{background-image:url("data:image/svg+xml,${encodeURIComponent(washSVG('stroke',c1,c2,hash(k)%83+i*7))}")}`;
+  }
+  css+=`.w-ink-s0{background-image:url("data:image/svg+xml,${encodeURIComponent(washSVG('stroke','#BDB8AE','#8E8A82',4))}")}`;
+  const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
+}
+
+const STAR=c=>`url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 13"><path d="M7 .6l1.9 4 4.3.5-3.2 3 .9 4.3L7 10.200l-3.9 2.2.9-4.3-3.200-3 4.300-.5z" fill="${c}"/></svg>`)}")`;
+const STAR_BG=STAR('#F3EFE8');
+function stars(d,label=true){return `<span class="stars" role="img" aria-label="Difficulty ${d} out of 5"><i class="s0" style='background-image:${STAR_BG}'></i><i style='background-image:${STAR_BG};width:${d/5*100}%'></i></span>${label?`<span>${d}</span>`:''}`}
+
+const IC={
+  suggest:'<path d="M12 3l2.400 6.600L21 12l-6.600 2.400L12 21l-2.400-6.600L3 12l6.600-2.400z"/>',
+  projects:'<path d="M5 21V4h13l-3 4.500 3 4.500H5"/>',
+  log:'<path d="M4 4h16v16H4zM12 8v8M8 12h8"/>',
+  plan:'<path d="M4 6h16v14H4zM4 11h16M8 3v5M16 3v5"/>',
+  points:'<path d="M5 20v-8M12 20V4M19 20v-11"/>',
+  home:'<path d="M4 11l8-7 8 7v9h-5v-6h-6v6H4z"/>',
+  bests:'<path d="M2.500 20l6.500-12 4 6.500 3-4.500 5.500 10z"/>',
+  library:'<path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/>',
+  gear:'<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
+  up:'<path d="M6 14l6-6 6 6"/>',down:'<path d="M6 10l6 6 6-6"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',minus:'<path d="M5 12h14"/>',back:'<path d="M14 6l-6 6 6 6"/>',
+  eye:'<path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.500"/>',
+  wide:'<path d="M4 8v8M20 8v8M8 12h8M8 12l3-3M8 12l3 3M16 12l-3-3M16 12l-3 3"/>',
+  arrange:'<path d="M4 5h16v5H4zM4 14h7v5H4zM13 14h7v5h-7z"/>',
+  pen:'<path d="M4 20l1-4L16 5l3 3L8 19z"/>',
+};
+const ic=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true">${IC[n]}</svg>`;
+/* ================= state, storage, scoring ================= */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const ds=dt=>`${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}`;
+const pd=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c,12)};
+const today=()=>ds(new Date());
+const addDays=(s,n)=>{const d=pd(s);d.setDate(d.getDate()+n);return ds(d)};
+const diffDays=(a,b)=>Math.round((pd(a)-pd(b))/864e5);
+const weekStart=s=>addDays(s,-((pd(s).getDay()+6)%7));
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const fmtDay=s=>{const d=pd(s);return `${DOW[d.getDay()]}, ${MON[d.getMonth()]} ${d.getDate()}`};
+const fmtShort=s=>{const d=pd(s);return `${MON[d.getMonth()]} ${d.getDate()}`};
+const ago=n=>n<=0?'today':n===1?'yesterday':`${n} days ago`;
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const clone=o=>JSON.parse(JSON.stringify(o));
+
+const LS='chalkline.v1';
+const blank=()=>({v:1,custom:{},projects:defaultProjects(),plan:{},layout:{},log:[],ts:{}});
+let S=blank();
+const GONE={id:'?',name:'Removed exercise',g:'core',u:'reps',d:1,use:'Strength',m:[],p:[],def:5,pose:'pushup'};
+const X=id=>S.custom[id]||B[id]||GONE;
+const allEx=()=>[...Object.values(B),...Object.values(S.custom)];
+const unit=(e,n)=>e.u==='sec'?`${n} s`:`${n} ${n===1?'rep':'reps'}`;
+const unitWord=e=>e.u==='sec'?'seconds':'reps';
+const refOf=e=>e.ref||e.def||1;
+const valOf=e=>10*Math.pow(2,e.d-1);              // value of a solid set: doubles with every star
+const curve=x=>x<=1?x:Math.pow(x,2.2);             // linear up to the mark, then climbing fast
+const basePts=(e,n)=>n>0?Math.max(1,Math.round(valOf(e)*curve(n/refOf(e)))):0;
+const inG=(e,g)=>e.g===g||(e.g2||[]).includes(g);
+const descOf=e=>e.custom?(e.desc||''):(DESC[e.id]||'');
+
+/* ---- derived stats (memoized per change) */
+let _st=null;
+function bump(){_st=null}
+function stats(){
+  if(_st)return _st;
+  const by={},days={},grp={};
+  const log=[...S.log].sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:a.t-b.t);
+  for(const e of log){
+    const s=by[e.ex]||(by[e.ex]={best:0,bestD:null,last:null,count:0,pts:0});
+    if(e.n>s.best){s.best=e.n;s.bestD=e.d}
+    s.last=e.d;s.count++;s.pts+=e.p;days[e.d]=(days[e.d]||0)+e.p;
+    const g=X(e.ex).g; if(!grp[g]||grp[g]<e.d)grp[g]=e.d;
+  }
+  return _st={by,days,grp,log};
+}
+function projStatus(pr){
+  const st=stats();let peak=-1,cur=-1,cleared=0;
+  const steps=pr.steps.map((s,i)=>{const b=st.by[s.ex]?.best||0,ok=b>=s.target;if(ok){peak=i;cleared++}else if(cur<0)cur=i;return{...s,i,best:b,ok}});
+  return{steps,peak,cur,cleared,done:steps.length>0&&cleared===steps.length,n:steps.length};
+}
+const rangePts=(from,to)=>{const d=stats().days;let t=0;for(const k in d)if(k>=from&&k<=to)t+=d[k];return t};
+
+/* ---- scoring */
+function score(exId,n,d,log=S.log){
+  const e=X(exId),base=basePts(e,n);
+  const prior=log.filter(x=>x.ex===exId&&x.d<=d);
+  let fresh=0,peak=0,step=0,flags='',gap=null;
+  if(!prior.length){fresh=Math.max(3,Math.round(base*.5));flags+='N'}
+  else{
+    const last=prior.reduce((m,x)=>x.d>m?x.d:m,'');gap=diffDays(d,last);
+    if(gap>3)fresh=Math.round(base*Math.min(.5,.05*(gap-3)));
+    const best=Math.max(...prior.map(x=>x.n));
+    if(n>best){peak=Math.round(base*.5)+10;flags+='P'}
+  }
+  const bestAll=Math.max(0,...log.filter(x=>x.ex===exId).map(x=>x.n));
+  for(const pr of S.projects)pr.steps.forEach((s,i)=>{
+    if(s.ex===exId&&n>=s.target&&bestAll<s.target){step+=Math.round(20*e.d)+(i===pr.steps.length-1?100:0);if(!flags.includes('S'))flags+='S'}
+  });
+  return{base,fresh,peak,step,total:base+fresh+peak+step,flags,gap};
+}
+function addLog(exId,n,d,sets=1){
+  const made=[];
+  for(let i=0;i<sets;i++){
+    const sc=score(exId,n,d);
+    const en={id:uid(),ex:exId,n,d,t:Date.now()+i,p:sc.total,b:[sc.base,sc.fresh,sc.peak,sc.step],f:sc.flags};
+    S.log.push(en);made.push(en);bump();
+  }
+  dirty('log-'+d.slice(0,7));
+  return made;
+}
+function removeLog(ids){
+  const months=new Set();
+  S.log=S.log.filter(e=>{if(ids.includes(e.id)){months.add('log-'+e.d.slice(0,7));return false}return true});
+  bump();months.forEach(dirty);
+}
+
+/* ---- storage: this device (cache) + account (when available) */
+const store={db:null,uid:null,mode:'device',dirty:new Set(),busy:false,timer:null,err:false};
+function saveLocal(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
+function loadLocal(){try{const r=localStorage.getItem(LS);if(r){const o=JSON.parse(r);if(o&&o.v===1)S=Object.assign(blank(),o)}}catch(e){}}
+function dirty(doc){
+  S.ts[doc]=Date.now();saveLocal();
+  if(!store.db)return;
+  store.dirty.add(doc);clearTimeout(store.timer);store.timer=setTimeout(flush,900);
+}
+const col=()=>store.db.collection('data/users/'+store.uid);
+function docBody(id){
+  if(id==='main'){
+    const cut=addDays(today(),-21),plan={};
+    for(const k in S.plan)if(k>=cut)plan[k]=S.plan[k];
+    return{v:1,custom:S.custom,projects:S.projects,plan,layout:S.layout,at:S.ts.main||Date.now()};
+  }
+  const m=id.slice(4);
+  return{entries:S.log.filter(e=>e.d.startsWith(m)),at:S.ts[id]||Date.now()};
+}
+async function flush(){
+  if(store.busy||!store.db||!store.dirty.size)return;
+  store.busy=true;
+  const ids=[...store.dirty];store.dirty.clear();
+  for(const id of ids){
+    try{await col().doc(id).set(clone(docBody(id)));store.err=false}
+    catch(e){store.err=true;store.dirty.add(id)}
+  }
+  store.busy=false;syncLabel();
+  if(store.dirty.size&&!store.err){clearTimeout(store.timer);store.timer=setTimeout(flush,900)}
+}
+function applyRemote(remote){
+  let changed=false;
+  const m=remote.main;
+  if(m&&(m.at||0)>=(S.ts.main||0)){
+    S.custom=m.custom||{};S.projects=m.projects||[];S.plan=m.plan||{};S.layout=m.layout||{};S.ts.main=m.at||0;changed=true;
+  }else if(S.ts.main)store.dirty.add('main');
+  const months=new Set([...Object.keys(remote).filter(k=>k.startsWith('log-')),...Object.keys(S.ts).filter(k=>k.startsWith('log-'))]);
+  for(const id of months){
+    const r=remote[id];
+    if(r&&(r.at||0)>=(S.ts[id]||0)){
+      const mo=id.slice(4);
+      S.log=S.log.filter(e=>!e.d.startsWith(mo)).concat(r.entries||[]);S.ts[id]=r.at||0;changed=true;
+    }else if(S.ts[id])store.dirty.add(id);
+  }
+  if(changed){bump();saveLocal()}
+  return changed;
+}
+async function pull(){
+  if(!store.db)return false;
+  try{
+    const snap=await col().get(),remote={};
+    snap.docs.forEach(d=>{remote[d.id]=clone(d.data())});
+    const ch=applyRemote(remote);
+    if(store.dirty.size)flush();
+    return ch;
+  }catch(e){store.err=true;return false}
+}
+async function initCloud(){
+  if(!window.claude||!window.claude.use)return;
+  try{
+    const[db,user]=await Promise.all([window.claude.use('db'),window.claude.use('user')]);
+    const id=user?await user.id():null;
+    if(db&&id){store.db=db;store.uid=id;store.mode='account';if(await pull())render();}
+  }catch(e){}
+  syncLabel();
+}
+function syncLabel(){
+  const t=store.mode==='account'?(store.err?'Could not save to your account. Changes are kept on this device.':'Saved to your account'):'Saved on this device';
+  document.querySelectorAll('.sync').forEach(n=>n.textContent=t);
+  return t;
+}
+document.addEventListener('visibilitychange',async()=>{
+  if(document.visibilityState==='visible'&&store.db&&!store.dirty.size&&!store.busy&&!ui.modals.length){if(await pull())render()}
+});
+const saveMain=()=>dirty('main');
+/* ================= views ================= */
+const ui={tab:'home',arrange:false,modals:[],planDay:today(),libQ:'',libG:'all',libSort:'name',chart:'weeks',project:null,editProj:false,bestG:'all',histN:10,logQ:'',auto:{days:4,split:'ppl',replace:false,stretch:true},confirm:null};
+const TABS=[
+ {id:'home',name:'Home',c:'lime',sub:'Your week, what to do next, what is scheduled and where each project stands.',secs:[['week','This week','half'],['next','Suggested next','half'],['sched','Schedule','half'],['progress','Project progress','half'],['recent','Recent sets','half'],['quick','Log again','half'],['balance','Body areas, last 7 days','half']]},
+ {id:'suggest',name:'Suggestions',short:'Suggest',c:'gamboge',sub:'What to train next, drawn from your projects and your history.',secs:[['today','Planned for today','half'],['close','Close to hitting','half'],['stale','Not done in a while','half'],['areas','Body areas due','half']]},
+ {id:'projects',name:'Projects',c:'rose',sub:'Skills to work toward, one step at a time.',secs:[['active','In progress','full'],['done','Completed','full']]},
+ {id:'log',name:'Log',c:'cerulean',sub:'Record sets and look back over past days.',secs:[['quick','Log a set','half'],['todaylog','Today','half'],['history','Earlier days','full']]},
+ {id:'plan',name:'Plan',c:'emerald',sub:'Line up the next two weeks. Auto-fill picks moves by the body area they work.',secs:[['cal','Next 14 days','full'],['day','Selected day','half'],['auto','Auto-fill a week','half']]},
+ {id:'points',name:'Points',c:'orange',sub:'Harder moves, more reps, fresh moves and new peaks all score more.',secs:[['compare','This week against last','half'],['sources','Where this week\u2019s points came from','half'],['chart','Points over time','full'],['recent','Latest sets','full']]},
+ {id:'bests',name:'Bests',c:'violet',sub:'Your top sets and the furthest step in each project.',secs:[['prog','Best progression','half'],['peaks','Recent peaks','half'],['reps','Best reps and holds','full']]},
+ {id:'library',name:'Library',c:'ultra',sub:'Every exercise, with its difficulty, use and the muscles it works.',secs:[['all','All exercises','full'],['mine','Your own exercises','full']]},
+];
+const tabOf=id=>TABS.find(t=>t.id===id);
+function lay(tab){
+  const t=tabOf(tab),L=S.layout[tab]||{},ids=t.secs.map(s=>s[0]);
+  const order=(L.order||[]).filter(i=>ids.includes(i));ids.forEach(i=>{if(!order.includes(i))order.push(i)});
+  return{order,hidden:(L.hidden||[]).filter(i=>ids.includes(i)),size:L.size||{}};
+}
+const thumb=(e,cls='')=>`<span class="thumb ${cls} w-${GROUPS[e.g].c}-b${hash(e.id)%3}">${figure(e.pose)}</span>`;
+const gtag=e=>`<span class="tag"><span class="dot" style="--c:var(--${GROUPS[e.g].c});margin-right:6px"></span>${GROUPS[e.g].name}</span>`;
+const exMeta=e=>`<span class="meta">${stars(e.d)}<span class="tag">${esc(e.use)}</span><span>${basePts(e,refOf(e))} pts at ${unit(e,refOf(e))}</span></span>`;
+function exRow(e,{right='',extra='',n='',d='',bm=false}={}){
+  return `<button class="row" data-a="ex" data-id="${esc(e.id)}"${n?` data-n="${n}"`:''}${d?` data-d="${d}"`:''}>${thumb(e)}<span><span class="nm">${esc(e.name)}</span>${exMeta(e)}${extra}</span><span class="right">${bm?bodyMap(e.m,e.p):right}</span></button>`;
+}
+const empty=(t,b='')=>`<div class="empty">${t}${b?`<div>${b}</div>`:''}</div>`;
+const fill=(pct,c,k=0)=>pct>0?`<i class="w-${c}-s${k}" style="width:${Math.max(3,Math.min(100,pct))}%"></i>`:'';
+const bar=(pct,c,thin=true)=>`<span class="bar${thin?' thin':''}" style="display:block;margin-top:7px">${fill(pct,c,pct>50?0:1)}</span>`;
+const bonusTags=en=>{let o='';if(en.f.includes('N'))o+=`<span class="tag">First time +${en.b[1]}</span>`;else if(en.b[1])o+=`<span class="tag">Fresh +${en.b[1]}</span>`;if(en.b[2])o+=`<span class="tag">New peak +${en.b[2]}</span>`;if(en.b[3])o+=`<span class="tag">Step cleared +${en.b[3]}</span>`;return o};
+const entRow=(en,showDate=false)=>{const e=X(en.ex);return `<div class="ent"><button data-a="ex" data-id="${esc(en.ex)}" style="min-width:0"><span class="nm">${esc(e.name)}</span><span class="meta"><span>${unit(e,en.n)}${showDate?`, ${fmtShort(en.d)}`:''}</span><span class="bon">${bonusTags(en)}</span></span></button><span class="pts">+${en.p}</span><button class="ib sm" data-a="dellog" data-id="${en.id}" aria-label="Delete this set">${ic('x')}</button></div>`};
+
+/* ---- picking moves for a body area (suggestions + auto-fill) */
+function trainAt(id,target){
+  const e=X(id),b=stats().by[id]?.best||0;
+  let n=b?Math.max(1,Math.round(b*.75)):e.def;
+  if(target)n=Math.min(target,b?Math.max(n,1):Math.max(1,Math.ceil(target/2)));
+  if(e.u==='sec'&&n>=10)n=Math.round(n/5)*5;
+  return n;
+}
+function pickFor(g,count,skip=new Set()){
+  const st=stats(),t=today(),out=[];
+  const add=(id,n)=>{if(out.length<count&&!skip.has(id)&&X(id).g===g&&X(id)!==GONE&&!out.find(o=>o.ex===id))out.push({id:uid(),ex:id,n,sets:3})};
+  for(const pr of S.projects){const ps=projStatus(pr);if(ps.cur>=0){const s=ps.steps[ps.cur];add(s.ex,trainAt(s.ex,s.target))}}
+  Object.keys(st.by).map(id=>({id,gap:diffDays(t,st.by[id].last)})).filter(o=>o.gap>=4).sort((a,b)=>b.gap-a.gap).forEach(o=>add(o.id,trainAt(o.id)));
+  const done=Object.keys(st.by).filter(id=>X(id).g===g),lvl=done.length?done.reduce((a,id)=>a+X(id).d,0)/done.length:1.5;
+  allEx().filter(e=>e.g===g).sort((a,b)=>Math.abs(a.d-lvl)-Math.abs(b.d-lvl)).forEach(e=>add(e.id,trainAt(e.id)));
+  return out;
+}
+function autofillDay(d,focus){
+  const main=focus.filter(g=>g!=='stretch'),per=main.length<=1?5:main.length===2?3:2,items=[];
+  const y=S.plan[addDays(d,-1)],skip=new Set((y?.items||[]).map(i=>i.ex));
+  main.forEach(g=>items.push(...pickFor(g,per,skip)));
+  if(focus.includes('stretch')){
+    // stretches are chosen to match the muscles the rest of the day works
+    const used=new Set();items.forEach(it=>X(it.ex).m.forEach(k=>used.add(k)));
+    allEx().filter(e=>e.g==='stretch'&&e.d<=1.5).map(e=>({e,s:e.m.filter(k=>used.has(k)).length*2+e.p.filter(k=>used.has(k)).length,r:hash(e.id+d)}))
+      .sort((a,b)=>b.s-a.s||a.r-b.r).slice(0,main.length?3:6).forEach(({e})=>items.push({id:uid(),ex:e.id,n:e.def,sets:1}));
+  }
+  S.plan[d]={focus:[...focus],items};
+}
+const planDone=(d,it)=>S.log.filter(e=>e.d===d&&e.ex===it.ex).length;
+
+/* ---- sections */
+const SEC={home:{},suggest:{},projects:{},log:{},plan:{},points:{},bests:{},library:{}};
+
+SEC.suggest.today=()=>{
+  const d=today(),pl=S.plan[d];
+  if(!pl||!pl.items.length)return empty('Nothing is planned for today.',`<button class="btn pri" data-a="autoday" data-d="${d}">Auto-fill today</button> <button class="btn" data-a="tab" data-id="plan">Open plan</button>`);
+  return{aside:pl.focus.map(g=>GROUPS[g].name).join(', '),body:`<div class="rows">${pl.items.map(it=>{const e=X(it.ex),dn=planDone(d,it);return exRow(e,{n:it.n,d,right:`<b>${Math.min(dn,it.sets)} of ${it.sets}</b>sets done`,extra:`<span class="meta">${it.sets} × ${unit(e,it.n)}</span>`})}).join('')}</div>`};
+};
+const closeList=()=>S.projects.map(pr=>({pr,st:projStatus(pr)})).filter(o=>o.st.cur>=0).map(o=>{const s=o.st.steps[o.st.cur];return{...o,s,ratio:Math.min(1,s.best/s.target)}}).sort((a,b)=>b.ratio-a.ratio);
+const staleList=()=>{const st=stats(),t=today();return Object.keys(st.by).filter(id=>X(id)!==GONE).map(id=>({id,gap:diffDays(t,st.by[id].last)})).filter(o=>o.gap>=4).sort((a,b)=>b.gap-a.gap)};
+const areaList=()=>{const st=stats(),t=today();return Object.keys(GROUPS).map(g=>({g,gap:st.grp[g]?diffDays(t,st.grp[g]):9999})).sort((a,b)=>b.gap-a.gap)};
+const areaText=gap=>gap===9999?'Not trained yet':gap===0?'Trained today':`Last trained ${ago(gap)}`;
+SEC.suggest.close=()=>{
+  const list=closeList();
+  if(!list.length)return empty('Every project is finished. Start a new one to see what is within reach.',`<button class="btn" data-a="tab" data-id="projects">Open projects</button>`);
+  const seen=new Set(),uniq=list.filter(o=>!seen.has(o.s.ex)&&seen.add(o.s.ex)),near=uniq.filter(o=>o.ratio>=.5),show=(near.length?near:uniq).slice(0,4);
+  return{aside:near.length?`${near.length} within reach`:'Nearest next steps',body:`<div class="rows">${show.map(({pr,st,s,ratio})=>{const e=X(s.ex),left=s.target-s.best;
+    return `<button class="row" data-a="ex" data-id="${esc(s.ex)}" data-n="${s.target}">${thumb(e)}<span><span class="nm">${esc(e.name)}</span><span class="meta"><span class="dot" style="--c:var(--${pr.color})"></span>${esc(pr.name)}, step ${s.i+1} of ${st.n}</span>${bar(ratio*100,pr.color)}<span class="meta">${s.best?`Best ${s.best} of ${unit(e,s.target)}. ${left} more ${e.u==='sec'?(left===1?'second':'seconds'):(left===1?'rep':'reps')} clears it.`:`Not tried yet. The target is ${unit(e,s.target)} in one set.`}</span></span><span class="right"><b>${Math.round(ratio*100)}%</b></span></button>`}).join('')}</div>`};
+};
+SEC.suggest.stale=()=>{
+  const list=staleList().slice(0,6);
+  if(!list.length)return empty(S.log.length?'Nothing is overdue. Moves you skip for four days or more show up here.':'Once you have logged a few sets, moves you have skipped for a while show up here.');
+  return `<div class="rows">${list.map(o=>exRow(X(o.id),{right:`<b>${o.gap} days</b>since last`})).join('')}</div>`;
+};
+SEC.suggest.areas=()=>`<div class="rows">${areaList().map(({g,gap})=>{const s=pickFor(g,1)[0],e=s&&X(s.ex);
+    return `<div class="row" style="grid-template-columns:minmax(0,1fr) auto"><span><span class="nm"><span class="dot" style="--c:var(--${GROUPS[g].c});display:inline-block;margin-right:8px"></span>${GROUPS[g].name}</span><span class="meta">${areaText(gap)}</span></span>${e?`<button class="btn sm" data-a="ex" data-id="${esc(e.id)}" data-n="${s.n}">${esc(e.name)}</button>`:''}</div>`}).join('')}</div>`;
+
+/* ---- home */
+SEC.home.week=()=>{
+  const t=today(),ws=weekStart(t),st=stats(),cur=rangePts(ws,t),prev=rangePts(addDays(ws,-7),addDays(ws,-1));
+  let streak=0,d=st.days[t]!==undefined?t:addDays(t,-1);while(st.days[d]!==undefined){streak++;d=addDays(d,-1)}
+  const wl=st.log.filter(e=>e.d>=ws),tr=new Set(wl.map(e=>e.d)).size;
+  const cols=Array.from({length:7},(_,i)=>{const k=addDays(ws,i);return{v:st.days[k]||0,x:DOW[pd(k).getDay()],now:k===t}}),mx=Math.max(...cols.map(c=>c.v),1);
+  return{aside:prev?`Last week ${prev}`:'',body:`<div class="big">${cur}<small>points</small></div>
+  <div class="kv"><div><small>Streak</small><b>${streak} ${streak===1?'day':'days'}</b></div><div><small>Days trained</small><b>${tr} of 7</b></div><div><small>Sets</small><b>${wl.length}</b></div></div>
+  <div class="chart sm" role="img" aria-label="Points for each day this week">${cols.map((c,i)=>`<div class="col${c.now?' now':''}"><span class="bw">${c.v?`<span class="v" style="bottom:${c.v/mx*100}%">${c.v}</span><span class="b w-lime-c${i%2}" style="height:${c.v/mx*100}%"></span>`:''}</span><span class="x">${c.x}</span></div>`).join('')}</div>`};
+};
+SEC.home.next=()=>{
+  const out=[],seen=new Set(),add=(e,n,why)=>{if(e&&e!==GONE&&!seen.has(e.id)&&out.length<4){seen.add(e.id);out.push(exRow(e,{n,extra:`<span class="meta" style="color:var(--ink)">${why}</span>`}))}};
+  const cl=closeList();cl.slice(0,2).forEach(o=>add(X(o.s.ex),o.s.target,`<span class="dot" style="--c:var(--${o.pr.color})"></span>${esc(o.pr.name)} step ${o.s.i+1}: ${o.s.best?`best ${o.s.best} of ${o.s.target}`:`target ${unit(X(o.s.ex),o.s.target)}`}`));
+  const sl=staleList()[0];if(sl)add(X(sl.id),'',`Not done for ${sl.gap} days`);
+  const ar=areaList()[0],pk=pickFor(ar.g,3).find(p=>!seen.has(p.ex));if(pk)add(X(pk.ex),pk.n,`${GROUPS[ar.g].name} is due. ${areaText(ar.gap)}.`);
+  return{aside:`<button class="btn sm" data-a="tab" data-id="suggest">All suggestions</button>`,body:`<div class="rows">${out.join('')}</div>`};
+};
+SEC.home.sched=()=>{
+  const t=today(),days=Array.from({length:5},(_,i)=>addDays(t,i)),any=days.some(d=>S.plan[d]?.items.length);
+  if(!any)return{aside:`<button class="btn sm" data-a="tab" data-id="plan">Open plan</button>`,body:empty('Nothing is scheduled for the next five days.',`<button class="btn pri" data-a="autoday" data-d="${t}">Auto-fill today</button> <button class="btn" data-a="tab" data-id="plan">Plan a week</button>`)};
+  return{aside:`<button class="btn sm" data-a="tab" data-id="plan">Open plan</button>`,body:`<div class="rows">${days.map((d,i)=>{const pl=S.plan[d],n=pl?.items.length||0,dt=pd(d);
+    const done=i===0&&n?pl.items.filter(it=>planDone(d,it)>=it.sets).length:0;
+    return `<button class="row" style="grid-template-columns:52px minmax(0,1fr) auto" data-a="goplan" data-d="${d}"><span class="num" style="width:auto;height:auto;border:0;display:block;text-align:left;color:${i===0?'var(--ink)':'var(--mute)'}">${i===0?'Today':DOW[dt.getDay()]}<b style="display:block;font-size:19px;font-stretch:118%;font-weight:800;color:var(--ink);line-height:1.1">${dt.getDate()}</b></span>
+    <span>${n?`<span class="nm">${pl.focus.map(g=>GROUPS[g].name).join(', ')||'Workout'}</span><span class="meta">${pl.items.slice(0,3).map(it=>esc(X(it.ex).name)).join(', ')}${n>3?` and ${n-3} more`:''}</span>`:`<span class="meta" style="margin:0">Rest day, nothing planned</span>`}</span>
+    <span class="right">${n?(i===0?`<b>${done} of ${n}</b>moves done`:`<b>${n}</b>moves`):''}</span></button>`}).join('')}</div>`};
+};
+SEC.home.progress=()=>S.projects.length?{aside:`<button class="btn sm" data-a="tab" data-id="projects">All projects</button>`,body:`<div class="rows">${S.projects.map(pr=>{const st=projStatus(pr),cur=st.cur>=0?st.steps[st.cur]:null;
+  return `<button class="row" style="grid-template-columns:minmax(0,1fr) auto" data-a="proj" data-id="${pr.id}"><span><span class="nm">${esc(pr.name)}</span>${st.n?`<span class="segs" style="margin:7px 0 2px">${st.steps.map(s=>`<i class="${s.ok?`w-${pr.color}-s${s.i%2}`:''}${s.i===st.cur?' cur':''}"></i>`).join('')}</span>`:''}<span class="meta">${cur?`Now: ${esc(X(cur.ex).name)}, ${cur.best?`best ${cur.best} of ${unit(X(cur.ex),cur.target)}`:`target ${unit(X(cur.ex),cur.target)}`}`:st.done?'All steps cleared':'No steps yet'}</span></span><span class="right"><b>${st.cleared} of ${st.n}</b>steps</span></button>`}).join('')}</div>`}:empty('No projects yet.',`<button class="btn pri" data-a="tab" data-id="projects">Open projects</button>`);
+SEC.home.recent=()=>{const l=[...stats().log].reverse().slice(0,6);return{aside:`<button class="btn sm" data-a="tab" data-id="log">Full log</button>`,body:l.length?l.map(e=>entRow(e,true)).join(''):empty('Nothing logged yet. Your latest sets and the points they earned will show here.',`<button class="btn pri" data-a="tab" data-id="log">Log your first set</button>`)}};
+SEC.home.quick=()=>{const seen=new Set(),l=[];for(const en of [...stats().log].reverse()){if(!seen.has(en.ex)&&X(en.ex)!==GONE){seen.add(en.ex);l.push(X(en.ex))}if(l.length>=10)break}
+  const list=l.length?l:['pushup','pullup','squat','plank','dip','row','lunge','hollow'].map(X);
+  return{aside:l.length?'Your latest moves':'Common starting moves',body:`<div class="chips">${list.map(e=>`<button class="btn sm" data-a="ex" data-id="${esc(e.id)}"><span class="dot" style="--c:var(--${GROUPS[e.g].c})"></span>${esc(e.name)}</button>`).join('')}</div>`};
+};
+SEC.home.balance=()=>{
+  const t=today(),from=addDays(t,-6),st=stats(),sum={};Object.keys(GROUPS).forEach(g=>sum[g]=0);
+  st.log.filter(e=>e.d>=from).forEach(e=>{sum[X(e.ex).g]+=e.p});const mx=Math.max(...Object.values(sum),1);
+  return Object.keys(GROUPS).map((g,i)=>`<div class="src"><span><span class="dot" style="--c:var(--${GROUPS[g].c});display:inline-block;margin-right:8px"></span>${GROUPS[g].name}</span><span class="bar" style="display:block">${fill(sum[g]/mx*100,GROUPS[g].c,i%2)}</span><b>${sum[g]}</b></div>`).join('')+`<p class="meta" style="margin-top:10px">Points earned per body area. ${(()=>{const a=areaList()[0];return a.gap>=3?`${GROUPS[a.g].name} is the most overdue.`:'All four areas were trained in the last few days.'})()}</p>`;
+};
+
+function pcard(pr){
+  const st=projStatus(pr),goal=pr.steps.length?X(pr.steps[pr.steps.length-1].ex):null,cur=st.cur>=0?st.steps[st.cur]:null;
+  return `<button class="pcard" data-a="proj" data-id="${pr.id}" style="--pc:var(--${pr.color})"><span class="wash w-${pr.color}-b${hash(pr.id)%3}"></span>${goal?`<span class="goal">${figure(goal.pose)}</span>`:''}
+  <span><strong class="pn">${esc(pr.name)}</strong><span class="cnt" style="display:block">${st.n?`${st.cleared} of ${st.n} steps cleared`:'No steps yet'}</span></span>
+  ${st.n?`<span class="segs">${st.steps.map(s=>`<i class="${s.ok?`w-${pr.color}-s${s.i%2}`:''}${s.i===st.cur?' cur':''}"></i>`).join('')}</span>`:''}
+  <span class="now">${cur?`<span>Now:</span> ${esc(X(cur.ex).name)}, ${cur.best?`best ${cur.best} of ${unit(X(cur.ex),cur.target)}`:`target ${unit(X(cur.ex),cur.target)}`}`:st.done?'All steps cleared':'Add moves to build this progression'}</span></button>`;
+}
+SEC.projects.active=()=>{
+  const l=S.projects.filter(p=>!projStatus(p).done);
+  return{aside:`<button class="btn sm" data-a="newproj">${ic('plus')}New project</button>`,body:l.length?`<div class="pgrid">${l.map(pcard).join('')}</div>`:empty('No projects in progress.',`<button class="btn pri" data-a="newproj">New project</button>`)};
+};
+SEC.projects.done=()=>{const l=S.projects.filter(p=>projStatus(p).done);return l.length?`<div class="pgrid">${l.map(pcard).join('')}</div>`:empty('Clear the last step of a project and it moves here.')};
+
+function projectDetail(){
+  const pr=S.projects.find(p=>p.id===ui.project);if(!pr){ui.project=null;return page()}
+  const st=projStatus(pr),goal=pr.steps.length?X(pr.steps[pr.steps.length-1].ex):null;
+  let body;
+  if(ui.editProj){
+    body=`<div class="form"><div><label class="lab" for="pname">Project name</label><input id="pname" class="field" data-i="pname" value="${esc(pr.name)}" maxlength="40"></div>
+    <div><span class="lab">Color</span><div class="swatches">${Object.keys(PIG).map(k=>`<button class="sw" style="--c:var(--${k})" data-a="pcolor" data-id="${k}" aria-pressed="${pr.color===k}" aria-label="${k}"></button>`).join('')}</div></div>
+    <div><span class="lab">Steps, easiest first</span>${pr.steps.map((s,i)=>{const e=X(s.ex);return `<div class="edit-step"><span class="thumb xs w-${GROUPS[e.g].c}-b${hash(e.id)%3}">${figure(e.pose)}</span><span><span class="nm">${i+1}. ${esc(e.name)}</span><span class="meta">${stars(e.d)}</span></span>
+      <div class="ctl"><span class="stp"><button class="ib sm" data-a="starget" data-i="${i}" data-by="-1" aria-label="Lower target">${ic('minus')}</button><b>${unit(e,s.target)}</b><button class="ib sm" data-a="starget" data-i="${i}" data-by="1" aria-label="Raise target">${ic('plus')}</button></span>
+      <span class="stp"><button class="ib sm" data-a="smove" data-i="${i}" data-by="-1" aria-label="Move up"${i===0?' disabled':''}>${ic('up')}</button><button class="ib sm" data-a="smove" data-i="${i}" data-by="1" aria-label="Move down"${i===pr.steps.length-1?' disabled':''}>${ic('down')}</button><button class="ib sm" data-a="sdel" data-i="${i}" aria-label="Remove step">${ic('x')}</button></span></div></div>`}).join('')||empty('No steps yet. Add the moves that lead up to this skill.')}</div>
+    <div class="chips"><button class="btn" data-a="pick" data-for="step">${ic('plus')}Add a move</button><button class="btn pri" data-a="editproj">Done editing</button><button class="btn danger" data-a="delproj">${ui.confirm==='delproj'?'Tap again to delete':'Delete project'}</button></div></div>`;
+  }else{
+    body=st.n?`<div class="ladder">${st.steps.map(s=>{const e=X(s.ex),cls=s.ok?'ok':s.i===st.cur?'cur':'next';
+      return `<button class="step ${cls}" data-a="ex" data-id="${esc(s.ex)}" data-n="${s.target}" style="--pc:var(--${pr.color})"><span class="num">${s.i+1}</span>${thumb(e)}<span><span class="nm">${esc(e.name)}</span><span class="meta">${stars(e.d)}<span>Target ${unit(e,s.target)} in one set</span></span>${cls==='cur'?bar(Math.min(100,s.best/s.target*100),pr.color):''}</span><span class="right">${cls==='ok'?`<b>Cleared</b>best ${unit(e,s.best)}`:cls==='cur'?`<b>${s.best} of ${s.target}</b>current step`:s.best?`Best ${s.best} of ${s.target}`:'Up next'}</span></button>`}).join('')}</div>`
+      :empty('This project has no steps yet.',`<button class="btn pri" data-a="editproj">Add steps</button>`);
+  }
+  return `<div style="margin-bottom:12px"><button class="btn sm" data-a="projback">${ic('back')}All projects</button></div>
+  <div class="phero"><span class="wash w-${pr.color}-b${hash(pr.id)%3}"></span><div><h1>${esc(pr.name)}</h1><p class="meta" style="font-size:14px;margin:8px 0 14px">${st.n?`${st.cleared} of ${st.n} steps cleared`:'No steps yet'}${st.done?'. Project complete.':''}</p>${ui.editProj?'':`<button class="btn" data-a="editproj">${ic('pen')}Edit progression</button>`}</div>${goal?`<span class="goal">${figure(goal.pose)}</span>`:''}</div>
+  <div class="secs"><section class="sec"><div class="sec-h"><h2>${ui.editProj?'Edit progression':'Progression'}</h2><span class="aside">Steps clear on their own as you log sets</span></div>${body}</section></div>`;
+}
+
+const logResults=()=>{
+  const q=ui.logQ.trim().toLowerCase();let list;
+  if(q)list=allEx().filter(e=>e.name.toLowerCase().includes(q)).slice(0,8);
+  else{const seen=new Set();list=[];for(const en of [...stats().log].reverse()){if(!seen.has(en.ex)&&X(en.ex)!==GONE){seen.add(en.ex);list.push(X(en.ex))}if(list.length>=6)break}
+    if(!list.length)list=['pushup','pullup','squat','plank','dip','hang'].map(X)}
+  return list.length?`<div class="rows">${list.map(e=>{const s=stats().by[e.id];return exRow(e,{right:s?`<b>${unit(e,s.best)}</b>best`:''})}).join('')}</div>`:empty('No exercise matches that search.');
+};
+SEC.log.quick=()=>({aside:`<button class="btn sm" data-a="tab" data-id="library">Browse library</button>`,body:`<label class="vh" for="logq">Find an exercise</label><input id="logq" class="field" type="search" data-i="logq" placeholder="Find an exercise" value="${esc(ui.logQ)}" style="margin-bottom:12px"><div id="logres">${logResults()}</div>`});
+SEC.log.todaylog=()=>{
+  const d=today(),l=stats().log.filter(e=>e.d===d).reverse(),pts=l.reduce((a,e)=>a+e.p,0);
+  return{aside:fmtDay(d),body:`<div class="big">${pts}<small>points from ${l.length} ${l.length===1?'set':'sets'}</small></div><div style="margin-top:14px">${l.length?l.map(e=>entRow(e)).join(''):empty('No sets yet today. Pick an exercise to log your first.')}</div>`};
+};
+SEC.log.history=()=>{
+  const st=stats(),t=today(),days=Object.keys(st.days).filter(d=>d<t).sort().reverse();
+  if(!days.length)return empty('Past days appear here once you have logged on more than one day.');
+  const show=days.slice(0,ui.histN);
+  return show.map(d=>{const l=st.log.filter(e=>e.d===d);return `<div class="dayh"><b>${fmtDay(d)}</b><span>${l.length} ${l.length===1?'set':'sets'}, ${st.days[d]} points</span></div>${l.map(e=>entRow(e)).join('')}`}).join('')+(days.length>show.length?`<div style="margin-top:14px"><button class="btn" data-a="morehist">Show earlier days</button></div>`:'');
+};
+
+SEC.plan.cal=()=>{
+  const t=today();
+  return `<div class="cal">${Array.from({length:14},(_,i)=>{const d=addDays(t,i),pl=S.plan[d],dt=pd(d);
+    return `<button class="day${i===0?' tod':''}" data-a="planday" data-d="${d}" aria-pressed="${ui.planDay===d}"><small>${i===0?'Today':DOW[dt.getDay()]}</small><b>${dt.getDate()}</b><span class="dots">${(pl?.focus||[]).map(g=>`<span class="dot" style="--c:var(--${GROUPS[g].c})"></span>`).join('')}</span><span class="n">${pl?.items.length?`${pl.items.length}<span class="w"> moves</span>`:'&nbsp;'}</span></button>`}).join('')}</div>
+  <div class="legend" style="margin-top:12px">${Object.values(GROUPS).map(g=>`<span><span class="dot" style="--c:var(--${g.c})"></span>${g.name}</span>`).join('')}</div>`;
+};
+SEC.plan.day=()=>{
+  const d=ui.planDay,pl=S.plan[d]||{focus:[],items:[]},isToday=d===today();
+  return{aside:fmtDay(d),body:`<div class="opt"><span class="lab" style="margin:0">Body areas for this day</span><div class="chips">${Object.keys(GROUPS).map(g=>`<button class="chip" data-a="focus" data-id="${g}" aria-pressed="${pl.focus.includes(g)}"><span class="dot" style="--c:var(--${GROUPS[g].c})"></span>${GROUPS[g].name}</button>`).join('')}</div></div>
+  <div class="chips" style="margin-bottom:6px"><button class="btn pri" data-a="autoday" data-d="${d}">${pl.items.length?'Auto-fill again':'Auto-fill this day'}</button><button class="btn" data-a="pick" data-for="plan">${ic('plus')}Add a move</button>${pl.items.length?`<button class="btn" data-a="clearday">Clear</button>`:''}</div>
+  ${pl.items.length?pl.items.map((it,i)=>{const e=X(it.ex),dn=planDone(d,it);return `<div class="pitem"><span class="thumb xs w-${GROUPS[e.g].c}-b${hash(e.id)%3}">${figure(e.pose)}</span><button data-a="ex" data-id="${esc(e.id)}" data-n="${it.n}"${isToday?` data-d="${d}"`:''} style="min-width:0"><span class="nm">${esc(e.name)}</span><span class="meta">${stars(e.d)}${isToday?`<span>${Math.min(dn,it.sets)} of ${it.sets} sets done</span>`:''}</span></button><button class="ib sm" data-a="pdel" data-i="${i}" aria-label="Remove from plan">${ic('x')}</button>
+    <div class="ctl"><span class="stp"><button class="ib sm" data-a="pset" data-i="${i}" data-k="sets" data-by="-1" aria-label="Fewer sets">${ic('minus')}</button><b>${it.sets} ${it.sets===1?'set':'sets'}</b><button class="ib sm" data-a="pset" data-i="${i}" data-k="sets" data-by="1" aria-label="More sets">${ic('plus')}</button></span><span class="stp"><button class="ib sm" data-a="pset" data-i="${i}" data-k="n" data-by="-1" aria-label="Lower amount">${ic('minus')}</button><b>${unit(e,it.n)}</b><button class="ib sm" data-a="pset" data-i="${i}" data-k="n" data-by="1" aria-label="Raise amount">${ic('plus')}</button></span></div></div>`}).join('')
+   :empty(pl.focus.length?'Pick Auto-fill to choose moves for these body areas, or add your own.':'Choose body areas above, then auto-fill. With none chosen, auto-fill picks the areas you have trained least recently.')}`};
+};
+const SPLITS={ppl:{name:'Push, pull, legs, core',seq:[['push'],['pull'],['legs'],['core']]},ul:{name:'Upper and lower',seq:[['push','pull'],['legs','core']]},full:{name:'Full body',seq:[['push','pull','legs','core']]}};
+const DAYPAT={3:[1,0,1,0,1,0,0],4:[1,1,0,1,1,0,0],5:[1,1,1,0,1,1,0],6:[1,1,1,1,1,1,0]};
+SEC.plan.auto=()=>`<div class="opt"><span class="lab" style="margin:0">Training days</span><div class="chips">${[3,4,5,6].map(n=>`<button class="chip" data-a="autoset" data-k="days" data-id="${n}" aria-pressed="${ui.auto.days===n}">${n} days</button>`).join('')}</div></div>
+  <div class="opt"><span class="lab" style="margin:0">Split</span><div class="chips">${Object.keys(SPLITS).map(k=>`<button class="chip" data-a="autoset" data-k="split" data-id="${k}" aria-pressed="${ui.auto.split===k}">${SPLITS[k].name}</button>`).join('')}</div></div>
+  <div class="opt"><div class="chips"><button class="chip" data-a="autoset" data-k="stretch" aria-pressed="${ui.auto.stretch}">End each day with stretches</button><button class="chip" data-a="autoset" data-k="replace" aria-pressed="${ui.auto.replace}">Replace days already planned</button></div></div>
+  <button class="btn pri" data-a="autoweek">Auto-fill the next 7 days</button>
+  <p class="meta" style="margin-top:12px">Each day gets the current step of matching projects first, then moves you have not done in a while, then staples at your level. Stretches are matched to the muscles that day works.</p>`;
+
+SEC.points.compare=()=>{
+  const t=today(),ws=weekStart(t),cur=rangePts(ws,t),prev=rangePts(addDays(ws,-7),addDays(ws,-1)),left=6-diffDays(t,ws);
+  const dt=pd(t),ms=`${t.slice(0,8)}01`,lm=new Date(dt.getFullYear(),dt.getMonth()-1,1,12),lme=addDays(ms,-1);
+  const mc=rangePts(ms,t),mp=rangePts(ds(lm),lme),mx=Math.max(cur,prev,1),mmx=Math.max(mc,mp,1);
+  const row=(l,v,m,c)=>`<div><div class="l"><span>${l}</span><b>${v}</b></div><span class="bar" style="display:block">${fill(v/m*100,c)}</span></div>`;
+  return `<div class="big">${cur}<small>points this week</small></div>
+  <p class="delta">${cur>=prev?(prev?`<b>${cur-prev}</b> ahead of last week\u2019s total.`:cur?'Your first scoring week.':'Log a set to start this week\u2019s total.'):`<b>${prev-cur}</b> short of last week\u2019s total, with ${left} ${left===1?'day':'days'} left.`}</p>
+  <div class="duo">${row('This week',cur,mx,'orange')}${row('Last week',prev,mx,'ink')}${row(MON[dt.getMonth()],mc,mmx,'rose')}${row(MON[lm.getMonth()],mp,mmx,'ink')}</div>`;
+};
+SEC.points.sources=()=>{
+  const ws=weekStart(today()),s=[0,0,0,0];S.log.filter(e=>e.d>=ws).forEach(e=>e.b.forEach((v,i)=>s[i]+=v));
+  const mx=Math.max(...s,1),L=[['Base','cerulean'],['Freshness','emerald'],['New peaks','rose'],['Project steps','violet']];
+  return L.map(([n,c],i)=>`<div class="src"><span>${n}</span><span class="bar" style="display:block">${fill(s[i]/mx*100,c,i%2)}</span><b>${s[i]}</b></div>`).join('')+
+  `<div class="rules"><span>Base: every move has a value and a solid-set mark, both shown on the move. Hit the mark and you earn the full value. The value doubles with each star of difficulty.</span><span>Below the mark, points go up evenly with reps or seconds. Past it they climb fast: a third more than the mark is close to double. Marks differ by move, so 20 squats is an ordinary set and 20 pull-ups is worth a great deal.</span><span>Bonuses are not shown before you log. They are added afterward and listed on each set.</span><span>Freshness: up to +50% for a move you have skipped for four days or more, and +50% the first time.</span><span>New peak: +50% and 10 points when a set beats your best.</span><span>Project step: 20 points per star when a set clears a step, and 100 for the final step.</span></div>`;
+};
+SEC.points.chart=()=>{
+  const t=today(),st=stats();let cols=[];
+  if(ui.chart==='days')for(let i=13;i>=0;i--){const d=addDays(t,-i);cols.push({v:st.days[d]||0,x:i===0?'Today':String(pd(d).getDate()),now:i===0})}
+  if(ui.chart==='weeks'){const ws=weekStart(t);for(let i=9;i>=0;i--){const a=addDays(ws,-7*i);cols.push({v:rangePts(a,addDays(a,6)),x:`${pd(a).getMonth()+1}/${pd(a).getDate()}`,now:i===0})}}
+  if(ui.chart==='months'){const dt=pd(t);for(let i=11;i>=0;i--){const a=new Date(dt.getFullYear(),dt.getMonth()-i,1,12),b=new Date(dt.getFullYear(),dt.getMonth()-i+1,0,12);cols.push({v:rangePts(ds(a),ds(b)),x:MON[a.getMonth()],now:i===0})}}
+  if(ui.chart==='years'){const y=pd(t).getFullYear(),first=Math.min(y-2,...Object.keys(st.days).map(d=>+d.slice(0,4)));for(let k=first;k<=y;k++)cols.push({v:rangePts(`${k}-01-01`,`${k}-12-31`),x:String(k),now:k===y})}
+  const mx=Math.max(...cols.map(c=>c.v),1);
+  return{aside:`<span class="chips">${['days','weeks','months','years'].map(k=>`<button class="chip" data-a="chart" data-id="${k}" aria-pressed="${ui.chart===k}">${k[0].toUpperCase()+k.slice(1)}</button>`).join('')}</span>`,
+   body:`<div class="chart" role="img" aria-label="Points by ${ui.chart}">${cols.map((c,i)=>`<div class="col${c.now?' now':''}"><span class="bw">${c.v?`<span class="v" style="bottom:${c.v/mx*100}%">${c.v}</span><span class="b w-orange-c${i%2}" style="height:${c.v/mx*100}%"></span>`:''}</span><span class="x">${c.x}</span></div>`).join('')}</div>`};
+};
+SEC.points.recent=()=>{const l=[...stats().log].reverse().slice(0,12);return l.length?l.map(e=>entRow(e,true)).join(''):empty('Each set you log lands here with its point breakdown.',`<button class="btn pri" data-a="tab" data-id="log">Log a set</button>`)};
+
+SEC.bests.prog=()=>S.projects.length?`<div class="rows">${S.projects.map(pr=>{const st=projStatus(pr);if(!st.n)return '';const s=st.steps[Math.max(0,st.peak)],e=X(s.ex);
+  return `<button class="row" data-a="proj" data-id="${pr.id}"${st.peak<0?' style="opacity:.6"':''}>${thumb(e)}<span><span class="nm">${esc(pr.name)}</span><span class="meta"><span class="dot" style="--c:var(--${pr.color})"></span>${st.peak<0?'No step cleared yet':`Furthest: step ${st.peak+1}, ${esc(e.name)}, ${unit(e,s.best)}`}</span></span><span class="right"><b>${st.cleared} of ${st.n}</b>steps</span></button>`}).join('')}</div>`:empty('Projects you start show their furthest step here.');
+SEC.bests.peaks=()=>{const l=[...stats().log].reverse().filter(e=>/[PS]/.test(e.f)).slice(0,7);
+  return l.length?`<div class="rows">${l.map(en=>{const e=X(en.ex);return exRow(e,{right:`<b>${unit(e,en.n)}</b>${fmtShort(en.d)}`,extra:`<span class="meta bon">${en.b[2]?'<span class="tag">New peak</span>':''}${en.b[3]?'<span class="tag">Step cleared</span>':''}</span>`})}).join('')}</div>`:empty('Beat your best set of any move, or clear a project step, and it is recorded here.')};
+SEC.bests.reps=()=>{
+  const st=stats(),ids=Object.keys(st.by).filter(id=>X(id)!==GONE&&(ui.bestG==='all'||inG(X(id),ui.bestG))).sort((a,b)=>X(b).d-X(a).d||X(a).name.localeCompare(X(b).name));
+  const chips=`<div class="chips" style="margin-bottom:10px">${[['all','All'],...Object.keys(GROUPS).map(g=>[g,GROUPS[g].name])].map(([k,n])=>`<button class="chip" data-a="bestg" data-id="${k}" aria-pressed="${ui.bestG===k}">${n}</button>`).join('')}</div>`;
+  return chips+(ids.length?`<div class="cards">${ids.map(id=>{const e=X(id),s=st.by[id];return exRow(e,{right:`<b>${unit(e,s.best)}</b>${fmtShort(s.bestD)}`,extra:`<span class="meta">Logged ${s.count} ${s.count===1?'time':'times'}</span>`})}).join('')}</div>`:empty(S.log.length?'No logged moves in this body area yet.':'Your best set of every move you log is kept here.'));
+};
+
+const libResults=()=>{
+  const q=ui.libQ.trim().toLowerCase();
+  let l=allEx().filter(e=>(ui.libG==='all'||inG(e,ui.libG))&&(!q||e.name.toLowerCase().includes(q)||e.m.concat(e.p).some(k=>MUSC[k].toLowerCase().includes(q))));
+  l.sort(ui.libSort==='name'?(a,b)=>a.name.localeCompare(b.name):ui.libSort==='hard'?(a,b)=>b.d-a.d||a.name.localeCompare(b.name):(a,b)=>a.d-b.d||a.name.localeCompare(b.name));
+  return l.length?`<div class="cards">${l.map(e=>exRow(e,{bm:true})).join('')}</div>`:empty('No exercise matches. Try another name or muscle, or add your own.');
+};
+SEC.library.all=()=>({aside:`${allEx().length} exercises`,body:`<label class="vh" for="libq">Search by name or muscle</label><input id="libq" class="field" type="search" data-i="libq" placeholder="Search by name or muscle" value="${esc(ui.libQ)}">
+  <div class="chips" style="margin:10px 0 4px">${[['all','All'],...Object.keys(GROUPS).map(g=>[g,GROUPS[g].name])].map(([k,n])=>`<button class="chip" data-a="libg" data-id="${k}" aria-pressed="${ui.libG===k}">${n}</button>`).join('')}
+  <span style="width:1px;background:var(--line2);margin:4px 3px"></span>${[['name','A to Z'],['easy','Easiest first'],['hard','Hardest first']].map(([k,n])=>`<button class="chip" data-a="libsort" data-id="${k}" aria-pressed="${ui.libSort===k}">${n}</button>`).join('')}</div>
+  <div class="legend" style="margin:10px 0 6px"><span><span class="sq" style="--c:var(--main)"></span>Main muscles</span><span><span class="sq" style="--c:var(--part)"></span>Partial</span><span>Each pair of figures shows the body from the front (left) and from the back (right).</span></div><div id="libres">${libResults()}</div>`});
+SEC.library.mine=()=>{const l=Object.values(S.custom);return{aside:`<button class="btn sm" data-a="newex">${ic('plus')}New exercise</button>`,body:l.length?`<div class="cards">${l.map(e=>exRow(e,{bm:true})).join('')}</div>`:empty('Add moves that are not in the library. They work everywhere the built-in ones do: projects, plans, points and bests.')}};
+
+/* ---- shell */
+function secWrap(tab,id,title,size,r,idx,n){
+  const body=typeof r==='string'?r:r.body,aside=typeof r==='string'?'':r.aside||'';
+  const tools=ui.arrange?`<span class="sec-tools"><button class="ib sm" data-a="secmove" data-id="${id}" data-by="-1" aria-label="Move ${esc(title)} up"${idx===0?' disabled':''}>${ic('up')}</button><button class="ib sm" data-a="secmove" data-id="${id}" data-by="1" aria-label="Move ${esc(title)} down"${idx===n-1?' disabled':''}>${ic('down')}</button><button class="ib sm w-toggle" data-a="secsize" data-id="${id}" aria-label="Switch ${esc(title)} between full and half width">${ic('wide')}</button><button class="ib sm" data-a="sechide" data-id="${id}" aria-label="Hide ${esc(title)}">${ic('x')}</button></span>`:(aside?`<span class="aside">${aside}</span>`:'');
+  return `<section class="sec ${size}"><div class="sec-h"><h2>${esc(title)}</h2>${tools}</div>${ui.arrange?'<p class="meta">Use the arrows to move this part.</p>':body}</section>`;
+}
+function page(){
+  const t=tabOf(ui.tab);
+  if(ui.tab==='projects'&&ui.project)return projectDetail();
+  const L=lay(t.id),vis=L.order.filter(i=>!L.hidden.includes(i));
+  const secs=vis.map((i,k)=>{const d=t.secs.find(s=>s[0]===i);return secWrap(t.id,i,d[1],L.size[i]||d[2],ui.arrange?'':SEC[t.id][i](),k,vis.length)}).join('');
+  const hid=ui.arrange&&L.hidden.length?`<div class="hidden-list">Hidden: ${L.hidden.map(i=>`<button class="btn sm" data-a="secshow" data-id="${i}">${ic('eye')}${esc(t.secs.find(s=>s[0]===i)[1])}</button>`).join('')}</div>`:'';
+  return `<header class="phead w-${t.c}-band"><h1>${t.name}</h1>
+  <div class="phead-tools"><button class="btn sm${ui.arrange?' pri':''}" data-a="arrange">${ui.arrange?'Done':ic('arrange')+'Arrange'}</button><button class="ib only-m" data-a="settings" aria-label="Settings">${ic('gear')}</button></div><p class="sub">${ui.arrange?'Move, resize or hide the parts of this tab. Each tab keeps its own arrangement.':t.sub}</p></header>
+  <div class="secs${ui.arrange?' arr':''}">${secs}${hid}</div>`;
+}
+function render(){
+  const ws=weekStart(today()),wk=rangePts(ws,today());
+  const nav=cls=>TABS.map(t=>`<button class="${cls}" data-a="tab" data-id="${t.id}" style="--tc:var(--${t.c})"${ui.tab===t.id?' aria-current="page"':''}${cls==='tab'&&t.short?` aria-label="${t.name}"`:''}>${ic(t.id)}<span>${cls==='tab'&&t.short?t.short:t.name}</span></button>`).join('');
+  $('#app').innerHTML=`<aside class="side"><div class="brand">Chalkline</div><nav style="display:grid;gap:2px" aria-label="Sections">${nav('snav')}</nav>
+    <div class="side-foot"><div class="wk"><b>${wk}</b><span>points this week</span></div><button class="btn sm" data-a="settings">${ic('gear')}Settings</button><span class="sync">${syncLabel()}</span></div></aside>
+  <main class="main">${page()}</main><nav class="tabbar" aria-label="Sections">${nav('tab')}</nav>`;
+}
+/* ================= sheets, actions, start-up ================= */
+const top_=()=>ui.modals[ui.modals.length-1];
+function openModal(m){clearTimeout(toastT);$('#toast').innerHTML='';undoFn=null;ui.modals.push(m);renderModal(true)}
+function closeModal(){ui.modals.pop();renderModal(true)}
+function renderModal(fresh=false){
+  const m=top_(),root=$('#modal'),old=root.querySelector('.sheet'),sc=old&&!fresh?old.scrollTop:0;
+  if(!m){root.innerHTML='';return}
+  root.innerHTML=`<div class="scrim" data-a="close"></div><div class="sheet" role="dialog" aria-modal="true">${SHEET[m.type](m)}</div>`;
+  const sh=root.querySelector('.sheet');sh.scrollTop=sc;
+  if(fresh){const c=sh.querySelector('[data-a="close"]');c&&c.focus({preventScroll:true})}
+}
+const shTop=(title,meta='')=>`<div class="sh-top"><div><h2>${title}</h2>${meta}</div><button class="ib" data-a="close" aria-label="Close">${ic('x')}</button></div>`;
+const stepAmt=(e,n,dir)=>Math.max(1,e.u==='sec'?(dir>0?(n<10?n+1:n+5):(n<=10?n-1:n-5)):n+dir);
+function preview(id,n,d,sets){
+  const tmp=[...S.log],tot={base:0,fresh:0,peak:0,step:0,total:0,flags:''};
+  for(let i=0;i<sets;i++){const sc=score(id,n,d,tmp);for(const k of['base','fresh','peak','step','total'])tot[k]+=sc[k];tot.flags+=sc.flags;tmp.push({ex:id,n,d,t:0})}
+  return tot;
+}
+const preHTML=m=>{const e=X(m.id),one=basePts(e,m.n),b=one*m.sets,r=refOf(e);
+  return `<div class="t">${b} points</div><div class="meta" style="margin:0">${m.sets>1?`${one} per set. `:''}${m.n<r?`Full value at ${unit(e,r)}.`:m.n===r?'That is the full value for a solid set.':'Past the mark, so each extra counts for more.'} Any bonuses are added after you log.</div>`};
+const quickAmts=e=>{const r=refOf(e),out=[];[.5,.75,1,1.33,1.67,2].forEach(k=>{let n=Math.max(1,Math.round(r*k));if(e.u==='sec'&&n>=15)n=Math.round(n/5)*5;if(!out.includes(n))out.push(n)});return out};
+function leadUp(id){
+  const e=X(id);let best=null;
+  for(const c of CHAINS){const i=c.indexOf(id);if(i>0&&(!best||i>best.length-1))best=c.slice(0,i+1)}
+  if(!best){ // no ready-made ladder: pick easier moves that share the most muscles, one per difficulty level
+    const cand=allEx().filter(x=>x.d<e.d&&x.id!==id).map(x=>({x,s:(x.g===e.g?2:0)+x.m.filter(k=>e.m.includes(k)).length*2+x.m.filter(k=>e.p.includes(k)).length+x.p.filter(k=>e.m.includes(k)).length})).filter(o=>o.s>=3);
+    const lv={};cand.forEach(o=>{if(!lv[o.x.d]||o.s>lv[o.x.d].s)lv[o.x.d]=o});
+    best=Object.keys(lv).map(Number).sort((a,b)=>a-b).slice(-5).map(k=>lv[k].x.id).concat(id);
+  }
+  best=best.slice(-8);
+  return best.map((x,i)=>{const s=X(x),last=i===best.length-1;return{ex:x,target:last&&s.u==='reps'&&s.d>=3.5?1:refOf(s)}});
+}
+
+const SHEET={};
+SHEET.ex=m=>{
+  const e=X(m.id),s=stats().by[m.id],t=today(),y=addDays(t,-1);
+  const projs=[];S.projects.forEach(pr=>pr.steps.forEach((st,i)=>{if(st.ex===m.id)projs.push({pr,i,st})}));
+  const names=a=>a.map(k=>MUSC[k]).join(', '),goalProj=S.projects.find(p=>p.steps.length&&p.steps[p.steps.length-1].ex===m.id);
+  return shTop(esc(e.name),`<div class="meta" style="margin-top:8px">${stars(e.d)}<span>out of 5</span><span class="tag">${esc(e.use)}</span>${gtag(e)}${(e.g2||[]).map(g=>`<span class="tag">${GROUPS[g].name}</span>`).join('')}</div>`)+
+  `${descOf(e)?`<p class="desc">${esc(descOf(e))}</p>`:''}
+  <div class="xgrid">${thumb(e,'lg')}<div>${bodyMap(e.m,e.p,'lg')}</div></div>
+  <div class="legend"><span><span class="sq" style="--c:var(--main)"></span>Main: ${names(e.m)||'none set'}</span>${e.p.length?`<span><span class="sq" style="--c:var(--part)"></span>Partial: ${names(e.p)}</span>`:''}</div>
+  <div class="kv four"><div><small>Points for a solid set</small><b>${basePts(e,refOf(e))} at ${unit(e,refOf(e))}</b></div><div><small>Best set</small><b>${s?unit(e,s.best):'None yet'}</b></div><div><small>Last done</small><b>${s?ago(diffDays(t,s.last)):'Never'}</b></div><div><small>Logged</small><b>${s?s.count:0} ${s&&s.count===1?'set':'sets'}</b></div></div>
+  ${projs.map(({pr,i,st})=>`<button class="meta" data-a="proj" data-id="${pr.id}" style="margin:0 0 6px"><span class="dot" style="--c:var(--${pr.color})"></span><span style="color:var(--ink)">${esc(pr.name)}</span> step ${i+1} of ${pr.steps.length}, target ${unit(e,st.target)}</button>`).join('')}
+  <div class="logbox"><div class="two"><span class="stp xl"><button class="ib" data-a="mstep" data-k="n" data-by="-1" aria-label="Less">${ic('minus')}</button><span style="text-align:center"><label class="vh" for="mn">${unitWord(e)}</label><input id="mn" type="number" inputmode="numeric" min="1" max="9999" data-i="mn" value="${m.n}"><small>${e.u==='sec'?'seconds you held':'reps you did'}, per set</small></span><button class="ib" data-a="mstep" data-k="n" data-by="1" aria-label="More">${ic('plus')}</button></span>
+    <span class="stp"><button class="ib" data-a="mstep" data-k="sets" data-by="-1" aria-label="Fewer sets">${ic('minus')}</button><b>${m.sets} ${m.sets===1?'set':'sets'}</b><button class="ib" data-a="mstep" data-k="sets" data-by="1" aria-label="More sets">${ic('plus')}</button></span></div>
+    <div><span class="lab">Or pick an amount. Points rise faster past the solid-set mark.</span><div class="chips">${quickAmts(e).map(n=>`<button class="chip amt" data-a="mset" data-n="${n}" aria-pressed="${m.n===n}"><b>${n}</b><span>${basePts(e,n)} pts</span></button>`).join('')}</div></div>
+    <div class="chips"><button class="chip" data-a="mdate" data-d="${t}" aria-pressed="${m.d===t}">Today</button><button class="chip" data-a="mdate" data-d="${y}" aria-pressed="${m.d===y}">Yesterday</button><label class="vh" for="md">Another day</label><input id="md" class="field" type="date" data-i="mdate" max="${t}" value="${m.d}" style="width:auto;min-height:32px;font-size:13px"></div>
+    <div class="pre" id="pre">${preHTML(m)}</div>
+    <button class="btn pri big" data-a="dolog">Log ${m.sets} ${m.sets===1?'set':'sets'}</button></div>
+  <div class="chips" style="margin-top:14px"><button class="btn" data-a="addplan">Add to plan for ${fmtDay(ui.planDay)}</button>${e.d>=2.5?(goalProj?`<button class="btn" data-a="proj" data-id="${goalProj.id}">${ic('projects')}Open its project</button>`:`<button class="btn" data-a="makeproj">${ic('projects')}Make this a project</button>`):''}${e.custom?`<button class="btn" data-a="editex">${ic('pen')}Edit exercise</button>`:''}</div>
+  ${e.d>=2.5&&!goalProj?`<p class="meta" style="margin-top:8px">Builds a step-by-step ladder of easier moves leading up to this one. You can edit it afterward.</p>`:''}`;
+};
+const pickResults=m=>{const q=(m.q||'').trim().toLowerCase(),l=allEx().filter(e=>!q||e.name.toLowerCase().includes(q)).sort((a,b)=>a.g.localeCompare(b.g)||a.d-b.d);
+  return l.length?`<div class="rows">${l.map(e=>`<button class="row" data-a="pickit" data-id="${esc(e.id)}">${thumb(e)}<span><span class="nm">${esc(e.name)}</span>${exMeta(e)}</span><span class="right">${GROUPS[e.g].name}</span></button>`).join('')}</div>`:empty('No exercise matches that search.')};
+SHEET.pick=m=>shTop(m.for==='step'?'Add a step':'Add to plan')+`<label class="vh" for="pickq">Find an exercise</label><input id="pickq" class="field" type="search" data-i="pickq" placeholder="Find an exercise" value="${esc(m.q||'')}" style="margin-bottom:12px"><div id="pickres">${pickResults(m)}</div>`;
+SHEET.exform=m=>{
+  const d=m.draft,ch=(k,v,l)=>`<button class="chip" data-a="xset" data-k="${k}" data-id="${v}" aria-pressed="${d[k]===v}">${l}</button>`;
+  return shTop(d.id?'Edit exercise':'New exercise')+`<div class="form">
+  <div><label class="lab" for="xname">Name</label><input id="xname" class="field" data-i="xname" value="${esc(d.name)}" maxlength="50" placeholder="For example, Ring row"></div>
+  <div><label class="lab" for="xdesc">Explanation, shown when you open the move</label><textarea id="xdesc" class="field" data-i="xdesc" rows="3" maxlength="300" placeholder="How to do it, or a cue to remember" style="padding:10px 12px;resize:vertical">${esc(d.desc||'')}</textarea></div>
+  <div><span class="lab">Counted in</span><div class="chips">${ch('u','reps','Reps')}${ch('u','sec','Seconds held')}</div></div>
+  <div><span class="lab">Difficulty</span><div class="starpick"><button class="ib sm" data-a="xdiff" data-by="-0.5" aria-label="Easier">${ic('minus')}</button><span class="meta" style="margin:0">${stars(d.d)}</span><button class="ib sm" data-a="xdiff" data-by="0.5" aria-label="Harder">${ic('plus')}</button></div></div>
+  <div><span class="lab">Use</span><div class="chips">${USES.map(u=>ch('use',u,u)).join('')}</div></div>
+  <div><span class="lab">Category, used by the planner</span><div class="chips">${Object.keys(GROUPS).map(g=>ch('g',g,GROUPS[g].name)).join('')}</div></div>
+  <div><span class="lab">Also counts as, only if it truly fits</span><div class="chips">${Object.keys(GROUPS).filter(g=>g!==d.g).map(g=>`<button class="chip" data-a="xg2" data-id="${g}" aria-pressed="${(d.g2||[]).includes(g)}">${GROUPS[g].name}</button>`).join('')}</div></div>
+  <div><span class="lab">Muscles. Tap a block once for main, twice for partial, again to clear.</span><div style="max-width:270px">${bodyMap(d.m,d.p,'lg',true)}</div><div class="legend" style="margin-top:8px"><span><span class="sq" style="--c:var(--main)"></span>Main: ${d.m.map(k=>MUSC[k]).join(', ')||'none'}</span><span><span class="sq" style="--c:var(--part)"></span>Partial: ${d.p.map(k=>MUSC[k]).join(', ')||'none'}</span></div></div>
+  <div><span class="lab">Solid set. This amount earns the move its full points.</span><span class="stp"><button class="ib sm" data-a="xdef" data-by="-1" aria-label="Less">${ic('minus')}</button><b>${unit(d,d.def)}</b><button class="ib sm" data-a="xdef" data-by="1" aria-label="More">${ic('plus')}</button></span></div>
+  <div><span class="lab">Drawing. Pick the closest shape.</span><div class="posegrid">${Object.keys(POSES).map(k=>`<button data-a="xset" data-k="pose" data-id="${k}" aria-pressed="${d.pose===k}" aria-label="${esc(B[k].name)}" title="${esc(B[k].name)}">${figure(k)}</button>`).join('')}</div></div>
+  <div class="chips"><button class="btn pri" data-a="xsave">Save exercise</button>${d.id?`<button class="btn danger" data-a="xdel">${ui.confirm==='xdel'?'Tap again to delete':'Delete exercise'}</button>`:''}</div></div>`;
+};
+SHEET.settings=()=>shTop('Settings')+`<div class="form">
+  <div><span class="lab">Saving</span><p class="sync" style="font-size:14px;color:var(--ink)">${syncLabel()}</p><p class="meta">${store.mode==='account'?'Your log follows you to any phone or computer where you open this page signed in.':'Your log is kept in this browser, on this device only. It does not sync between your phone and computer.'}</p></div>
+  <div><span class="lab">Sample history</span><p class="meta" style="margin:0 0 10px">Fills the last seven weeks with made-up sets so you can see the charts, bests and suggestions working. Erase it before you start for real.</p><button class="btn" data-a="sample"${S.log.length?' disabled':''}>Fill with sample history</button>${S.log.length?'<p class="meta">Available only while the log is empty.</p>':''}</div>
+  <div><span class="lab">Start over</span><p class="meta" style="margin:0 0 10px">Deletes every logged set, plan, custom exercise and layout, and restores the starting projects.</p><button class="btn danger" data-a="erase">${ui.confirm==='erase'?'Tap again to erase everything':'Erase everything'}</button></div></div>`;
+
+/* ---- toast */
+let toastT=null,undoFn=null;
+function toast(html,undo=null,ms=5200){
+  undoFn=undo;clearTimeout(toastT);
+  $('#toast').innerHTML=`<div class="toast">${html}${undo?`<button class="btn sm" data-a="undo">Undo</button>`:'<span></span>'}</div>`;
+  toastT=setTimeout(()=>{$('#toast').innerHTML='';undoFn=null},ms);
+}
+const note=t=>toast(`<span></span><span>${t}</span>`,null,3200);
+
+/* ---- sample + erase */
+function genSample(){
+  const t=today(),R=rng(42);
+  const set={1:[['incpush',12,1],['pushup',9,1.4],['dip',3,.7],['pike',5,.8],['support',15,3],['plean',8,2.500]],2:[['hang',20,4],['row',7,.8],['pullup',3,.6],['chinup',3,.6],['tuckfl',3,.9],['hknee',6,.8]],4:[['squat',14,1.5],['lunge',8,.7],['stepup',9,.7],['wallsit',25,4],['bridge',10,1],['calf',14,1]],6:[['plank',30,5],['hollow',15,3],['lraise',8,1],['tucksit',6,1.5],['frog',10,3],['pushup',10,1.4]]};
+  for(let back=48;back>=1;back--){
+    const d=addDays(t,-back),day=pd(d),list=set[day.getDay()];if(!list||R()<.1)continue;
+    const wk=(48-back)/7;let k=0;
+    for(const [id,base,gain] of list){ if(R()<.22)continue;
+      const sets=2+(R()<.5?1:0);
+      for(let i=0;i<sets;i++){const e=X(id);let n=Math.max(1,Math.round((base+gain*wk)*(.82+R()*.3)*(1-i*.08)));if(e.u==='sec'&&n>10)n=Math.round(n/5)*5;
+        const sc=score(id,n,d);S.log.push({id:uid()+k,ex:id,n,d,t:day.getTime()+(k++),p:sc.total,b:[sc.base,sc.fresh,sc.peak,sc.step],f:sc.flags});}
+    }
+  }
+  bump();new Set(S.log.map(e=>'log-'+e.d.slice(0,7))).forEach(dirty);
+}
+function eraseAll(){
+  const months=new Set(Object.keys(S.ts).filter(k=>k.startsWith('log-')));S.log.forEach(e=>months.add('log-'+e.d.slice(0,7)));
+  S=blank();bump();months.forEach(dirty);dirty('main');
+}
+
+/* ---- actions */
+const curProj=()=>S.projects.find(p=>p.id===ui.project);
+const planOf=d=>S.plan[d]||(S.plan[d]={focus:[],items:[]});
+function openEx(id,n,d){
+  const e=X(id);if(e===GONE)return;
+  const last=[...stats().log].reverse().find(x=>x.ex===id);
+  openModal({type:'ex',id,n:+n||(last?last.n:e.def),sets:1,d:d||today()});
+}
+function setLayout(tab,fn){const L=lay(tab);fn(L);S.layout[tab]=L;saveMain()}
+const A={
+  tab(d){ui.tab=d.id;ui.project=null;ui.editProj=false;ui.arrange=false;render();window.scrollTo(0,0)},
+  arrange(){ui.arrange=!ui.arrange;render()},
+  settings(){openModal({type:'settings'})},
+  close(){closeModal()},
+  ex(d){openEx(d.id,d.n,d.d)},
+  mstep(d){const m=top_(),e=X(m.id);if(d.k==='n')m.n=stepAmt(e,m.n,+d.by);else m.sets=Math.max(1,Math.min(10,m.sets+ +d.by));renderModal()},
+  mdate(d){top_().d=d.d;renderModal()},
+  mset(d){top_().n=+d.n;renderModal()},
+  makeproj(){const m=top_(),e=X(m.id),used=S.projects.map(p=>p.color),ks=Object.keys(PIG),c=ks.find(k=>!used.includes(k))||ks[S.projects.length%ks.length],p={id:'p-'+uid(),name:e.name,color:c,steps:leadUp(m.id)};
+    S.projects.push(p);saveMain();ui.modals=[];renderModal();ui.tab='projects';ui.project=p.id;ui.editProj=false;ui.arrange=false;render();window.scrollTo(0,0);note(`${esc(e.name)} is now a project with ${p.steps.length} steps.`)},
+  dolog(){
+    const m=top_(),e=X(m.id);if(!(m.n>=1))return note('Enter how many you did.');
+    const made=addLog(m.id,m.n,m.d,m.sets),tot=made.reduce((a,x)=>a+x.p,0),f=made.map(x=>x.f).join(''),base=made.reduce((a,x)=>a+x.b[0],0),bon=tot-base;
+    const why=[f.includes('N')?'first time':made.some(x=>x.b[1])?'fresh':'',f.includes('P')?'new peak':'',f.includes('S')?'step cleared':''].filter(Boolean).join(', ');
+    ui.modals=[];renderModal();render();
+    toast(`<span class="splash w-${GROUPS[e.g].c}-b${hash(e.id)%3}"></span><span class="t">+${tot}</span><span><span class="nm">${esc(e.name)}</span><span class="d">${m.sets} × ${unit(e,m.n)}. ${bon?`${base} base + ${bon} bonus (${why})`:`${base} base, no bonus`}</span></span>`,()=>{removeLog(made.map(x=>x.id));render()});
+  },
+  dellog(d){const en=S.log.find(e=>e.id===d.id);if(!en)return;removeLog([en.id]);render();toast('<span></span><span>Set deleted.</span>',()=>{S.log.push(en);bump();dirty('log-'+en.d.slice(0,7));render()})},
+  undo(){const f=undoFn;clearTimeout(toastT);$('#toast').innerHTML='';undoFn=null;f&&f()},
+  addplan(){const m=top_(),e=X(m.id),pl=planOf(ui.planDay);pl.items.push({id:uid(),ex:m.id,n:m.n,sets:3});if(!pl.focus.includes(e.g))pl.focus.push(e.g);saveMain();ui.modals=[];renderModal();render();note(`Added to the plan for ${fmtDay(ui.planDay)}.`)},
+  // custom exercises
+  newex(){openModal({type:'exform',draft:{name:'',g:'push',g2:[],u:'reps',d:2,use:'Strength',m:[],p:[],def:8,pose:'pushup'}})},
+  editex(){const e=X(top_().id);ui.modals=[];openModal({type:'exform',draft:clone(e)})},
+  xset(d){const x=top_().draft;x[d.k]=d.id;if(d.k==='g')x.g2=(x.g2||[]).filter(g=>g!==d.id);renderModal()},
+  xg2(d){const x=top_().draft;x.g2=x.g2||[];const i=x.g2.indexOf(d.id);i<0?x.g2.push(d.id):x.g2.splice(i,1);renderModal()},
+  xdiff(d){const x=top_().draft;x.d=Math.max(.5,Math.min(5,x.d+ +d.by));renderModal()},
+  xdef(d){const x=top_().draft;x.def=stepAmt(x,x.def,+d.by);renderModal()},
+  musc(d){const x=top_().draft,k=d.m;if(x.m.includes(k)){x.m=x.m.filter(v=>v!==k);x.p.push(k)}else if(x.p.includes(k))x.p=x.p.filter(v=>v!==k);else x.m.push(k);renderModal()},
+  xsave(){const x=top_().draft;x.name=x.name.trim();if(!x.name)return note('Give the exercise a name first.');const id=x.id||'c-'+uid();S.custom[id]={...x,id,custom:true};delete figCache[id];saveMain();ui.modals=[];renderModal();render();note('Exercise saved.')},
+  xdel(){if(ui.confirm!=='xdel'){ui.confirm='xdel';return renderModal()}const id=top_().draft.id;delete S.custom[id];S.projects.forEach(p=>p.steps=p.steps.filter(s=>s.ex!==id));for(const k in S.plan)S.plan[k].items=S.plan[k].items.filter(i=>i.ex!==id);bump();saveMain();ui.modals=[];renderModal();render();note('Exercise deleted.')},
+  // pickers
+  pick(d){openModal({type:'pick',for:d.for,q:''})},
+  pickit(d){const m=top_(),e=X(d.id);
+    if(m.for==='step'){const pr=curProj();pr&&pr.steps.push({ex:d.id,target:e.def})}
+    else{const pl=planOf(ui.planDay);pl.items.push({id:uid(),ex:d.id,n:trainAt(d.id),sets:3});if(!pl.focus.includes(e.g))pl.focus.push(e.g)}
+    saveMain();closeModal();render()},
+  // projects
+  proj(d){ui.modals=[];renderModal();ui.tab='projects';ui.project=d.id;ui.editProj=false;ui.arrange=false;render();window.scrollTo(0,0)},
+  projback(){ui.project=null;ui.editProj=false;render()},
+  newproj(){const used=S.projects.map(p=>p.color),c=Object.keys(PIG).find(k=>!used.includes(k))||'rose',p={id:'p-'+uid(),name:'New project',color:c,steps:[]};S.projects.push(p);saveMain();ui.project=p.id;ui.editProj=true;render();window.scrollTo(0,0)},
+  editproj(){ui.editProj=!ui.editProj;bump();render()},
+  delproj(){if(ui.confirm!=='delproj'){ui.confirm='delproj';return render()}S.projects=S.projects.filter(p=>p.id!==ui.project);ui.project=null;ui.editProj=false;saveMain();render()},
+  pcolor(d){curProj().color=d.id;saveMain();render()},
+  starget(d){const s=curProj().steps[+d.i];s.target=stepAmt(X(s.ex),s.target,+d.by);saveMain();render()},
+  smove(d){const st=curProj().steps,i=+d.i,j=i+ +d.by;if(j<0||j>=st.length)return;[st[i],st[j]]=[st[j],st[i]];saveMain();render()},
+  sdel(d){curProj().steps.splice(+d.i,1);saveMain();render()},
+  // plan
+  planday(d){ui.planDay=d.d;render()},
+  goplan(d){ui.planDay=d.d;ui.tab='plan';ui.arrange=false;render();window.scrollTo(0,0)},
+  focus(d){const pl=planOf(ui.planDay),i=pl.focus.indexOf(d.id);i<0?pl.focus.push(d.id):pl.focus.splice(i,1);saveMain();render()},
+  autoday(d){
+    const day=d.d;let focus=S.plan[day]?.focus||[];
+    if(!focus.length){const st=stats();focus=Object.keys(GROUPS).filter(g=>g!=='stretch').sort((a,b)=>(st.grp[a]||'').localeCompare(st.grp[b]||'')).slice(0,2);if(ui.auto.stretch)focus.push('stretch')}
+    autofillDay(day,focus);ui.planDay=day;saveMain();render();
+  },
+  clearday(){delete S.plan[ui.planDay];saveMain();render()},
+  pdel(d){planOf(ui.planDay).items.splice(+d.i,1);saveMain();render()},
+  pset(d){const it=planOf(ui.planDay).items[+d.i];if(d.k==='sets')it.sets=Math.max(1,Math.min(10,it.sets+ +d.by));else it.n=stepAmt(X(it.ex),it.n,+d.by);saveMain();render()},
+  autoset(d){if(d.k==='replace'||d.k==='stretch')ui.auto[d.k]=!ui.auto[d.k];else ui.auto[d.k]=d.k==='days'?+d.id:d.id;render()},
+  autoweek(){
+    const t=today(),pat=DAYPAT[ui.auto.days],seq=SPLITS[ui.auto.split].seq,st=stats();
+    const age=f=>Math.min(...f.map(g=>st.grp[g]?diffDays(t,st.grp[g]):999));
+    let k=seq.reduce((bi,f,i)=>age(f)>age(seq[bi])?i:bi,0),made=0;
+    for(let i=0;i<7;i++){const d=addDays(t,i),has=S.plan[d]?.items.length;
+      if(has&&!ui.auto.replace)continue;
+      if(!pat[i]){if(has)delete S.plan[d];continue}
+      autofillDay(d,ui.auto.stretch?[...seq[k%seq.length],'stretch']:seq[k%seq.length]);k++;made++}
+    saveMain();render();note(made?`Planned ${made} ${made===1?'day':'days'}.`:'Those days are already planned. Turn on replace to overwrite them.');
+  },
+  // filters
+  chart(d){ui.chart=d.id;render()},bestg(d){ui.bestG=d.id;render()},libg(d){ui.libG=d.id;render()},libsort(d){ui.libSort=d.id;render()},morehist(){ui.histN+=14;render()},
+  // layout
+  secmove(d){setLayout(ui.tab,L=>{const vis=L.order.filter(i=>!L.hidden.includes(i)),a=vis.indexOf(d.id),b=a+ +d.by;if(b<0||b>=vis.length)return;const i=L.order.indexOf(vis[a]),j=L.order.indexOf(vis[b]);[L.order[i],L.order[j]]=[L.order[j],L.order[i]]});render()},
+  secsize(d){setLayout(ui.tab,L=>{const def=tabOf(ui.tab).secs.find(s=>s[0]===d.id)[2],cur=L.size[d.id]||def;L.size[d.id]=cur==='half'?'full':'half'});render()},
+  sechide(d){setLayout(ui.tab,L=>{L.hidden.push(d.id)});render()},
+  secshow(d){setLayout(ui.tab,L=>{L.hidden=L.hidden.filter(i=>i!==d.id)});render()},
+  // settings
+  sample(){if(S.log.length)return;genSample();ui.modals=[];renderModal();render();note('Sample history added.')},
+  erase(){if(ui.confirm!=='erase'){ui.confirm='erase';return renderModal()}eraseAll();ui.modals=[];ui.project=null;renderModal();render();note('Everything erased.')},
+};
+document.addEventListener('click',ev=>{
+  const el=ev.target.closest('[data-a]');if(!el||el.disabled)return;
+  const a=el.dataset.a;if(ui.confirm&&ui.confirm!==a)ui.confirm=null;
+  if(A[a])A[a](el.dataset,el);
+});
+const I={
+  logq(v){ui.logQ=v;$('#logres').innerHTML=logResults()},
+  libq(v){ui.libQ=v;$('#libres').innerHTML=libResults()},
+  pickq(v){const m=top_();m.q=v;$('#pickres').innerHTML=pickResults(m)},
+  mn(v){const m=top_();m.n=Math.max(0,Math.min(9999,Math.round(+v||0)));$('#pre').innerHTML=m.n?preHTML(m):''},
+  mdate(v){const m=top_();if(v&&v<=today()){m.d=v;renderModal()}},
+  xname(v){top_().draft.name=v},
+  xdesc(v){top_().draft.desc=v},
+  pname(v){const p=curProj();if(p)p.name=v},
+};
+document.addEventListener('input',ev=>{const k=ev.target.dataset&&ev.target.dataset.i;if(k&&k!=='mdate'&&I[k])I[k](ev.target.value)});
+document.addEventListener('change',ev=>{const k=ev.target.dataset&&ev.target.dataset.i;
+  if(k==='mdate')I.mdate(ev.target.value);
+  if(k==='pname'){const p=curProj();if(p){p.name=p.name.trim()||'Untitled project';saveMain();render()}}
+});
+document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&ui.modals.length)closeModal()});
+
+injectWashes();loadLocal();render();initCloud();
+</script>
+</body></html>
