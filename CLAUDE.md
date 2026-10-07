@@ -2,6 +2,10 @@
 
 A gamified calisthenics tracker. One self-contained web page (`index.html`) plus a tiny Node server (`server.js`) that serves it and stores one shared log. Built for the owner and a few friends; the owner is not a developer, so prefer doing a step for them over explaining how to do it, and give click-by-click directions when something has to happen in a browser.
 
+**After every change, build, test, commit, push and check the live deploy without being asked.** The steps are in AGENTS.md:
+
+@AGENTS.md
+
 ## Current state (October 6, 2026)
 
 - The app is feature-complete for now and was built in a Claude chat, then split into the files here. `npm test` passes.
